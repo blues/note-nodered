@@ -1,0 +1,17 @@
+{
+    "name": "node-red-contrib-notecard",
+    "version": "0.0.1",
+    "description": "A Node-RED node to talk to the Notecard via Raspiberry PI's I2C port",
+    "dependencies": {
+        "i2c-bus": "^5.2.0"
+    },
+    "main": "notecard/notecard.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "node-red": {
+        "nodes": {
+            "notecard": "notecard/notecard.js"
+        }
+    }
+}
