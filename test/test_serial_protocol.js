@@ -1,7 +1,7 @@
 
 var assert = require('assert');
 
-const transactor = require('../notecard/bus-transactor.js');
+const protocol = require('../notecard/bus-serial-protocol.js');
 
 //function createReadWriter(config={readBufferLength:1024,writeBufferLength:1024}){
 function createReadWriter(){
@@ -109,7 +109,7 @@ describe('bus transactor', () =>  {
         
 
         it('should write [0,0] on to readwriter', async () =>  {
-            var numBytes = await transactor.queryAvailableBytes(rw);
+            var numBytes = await protocol.queryAvailableBytes(rw);
             assert.equal(rw.writeBuffer[0], 0, "First byte in write buffer should be 0");
             assert.equal(rw.writeBuffer[1], 0, "Second byte in write buffer should be 0");
         });
@@ -118,13 +118,13 @@ describe('bus transactor', () =>  {
             rw.writeBufferIndex = rw.writeBuffer.length;
             var numBytes = 7
             //numBytes = ;
-            await assert.rejects(async () => await transactor.queryAvailableBytes(rw));
+            await assert.rejects(async () => await protocol.queryAvailableBytes(rw));
 
         });
 
         it('should return number bytes available to read - zero', async () =>  {
             rw.reset();
-            var numBytes = await transactor.queryAvailableBytes(rw);
+            var numBytes = await protocol.queryAvailableBytes(rw);
             assert.equal(numBytes, 0, 'Expect 0 bytes, if first byte in read buffer is zero');
         });
 
@@ -132,14 +132,14 @@ describe('bus transactor', () =>  {
             rw.reset();
             rw.readBuffer[0] = 13;
 
-            var numBytes = await transactor.queryAvailableBytes(rw);
+            var numBytes = await protocol.queryAvailableBytes(rw);
             assert.equal(numBytes, 13, 'Expect 13 bytes to be available to read');
         });
 
         it('should throw error if number of bytes in read payload is non-zero', async () => {
             rw.reset();
             rw.readBuffer[1] = 17;
-            await assert.rejects(async () => {await transactor.queryAvailableBytes(rw)},
+            await assert.rejects(async () => {await protocol.queryAvailableBytes(rw)},
             (err) => {
               assert.strictEqual(err.name, 'Error');
               assert.strictEqual(err.message, 'response payload size on query is non-zero');
@@ -150,7 +150,7 @@ describe('bus transactor', () =>  {
         it('should throw error if not enough bytes were read', async () => {
             rw.reset();
             rw.readBufferIndex = rw.readBuffer.length;
-            await assert.rejects(async () => { await transactor.queryAvailableBytes(rw)}, 
+            await assert.rejects(async () => { await protocol.queryAvailableBytes(rw)}, 
             (err) => {
                 assert.strictEqual(err.name, 'Error');
                 assert.strictEqual(err.message, 'number of response bytes is fewer than 2');
@@ -170,7 +170,7 @@ describe('bus transactor', () =>  {
             var payload = Buffer.from("my_payload");
             var payloadSize = payload.length;
 
-            await transactor.sendRequest(rw, payload, payloadSize);
+            await protocol.sendRequest(rw, payload, payloadSize);
 
             assert.strictEqual(rw.writeBuffer[0], payload.length, 'Payload length not first byte in write buffer');
         });
@@ -180,7 +180,7 @@ describe('bus transactor', () =>  {
             var payload = Buffer.from("my_payload");
             var payloadSize = payload.length;
 
-            await transactor.sendRequest(rw, payload, payloadSize);
+            await protocol.sendRequest(rw, payload, payloadSize);
 
             assert.strictEqual(rw.writeBuffer.slice(1,payload.length + 1).toString(), "my_payload", 'Payload value not in write buffer');
         });
@@ -191,7 +191,7 @@ describe('bus transactor', () =>  {
             const PAYLOAD_REDUCTION = 3;
             const payloadSize = payload.length - PAYLOAD_REDUCTION;
 
-            await transactor.sendRequest(rw, payload, payloadSize);
+            await protocol.sendRequest(rw, payload, payloadSize);
 
             var payloadBoundary = payloadSize + 1;
             assert.strictEqual(rw.writeBuffer[0], payloadSize, 'Initial chunk size is incorrect');
@@ -232,7 +232,7 @@ describe('bus transactor', () =>  {
             };
 
 
-            var sender = transactor.sendRequest(rwHoldWrite, Buffer.from("my_payload"), 1, canceller);
+            var sender = protocol.sendRequest(rwHoldWrite, Buffer.from("my_payload"), 1, canceller);
             canceller.cancel();
             p.resolve("closing wait promise");
 
@@ -255,7 +255,7 @@ describe('bus transactor', () =>  {
             var numBytesAvailable = 1;
             var payloadSize = 3;
 
-            await transactor.readResponse(rw, numBytesAvailable, payloadSize);
+            await protocol.readResponse(rw, numBytesAvailable, payloadSize);
 
             assert.strictEqual(rw.writeBuffer[0], 0, 'Expect first element of write buffer to be 0 on read request')
         });
@@ -266,7 +266,7 @@ describe('bus transactor', () =>  {
             var numBytesAvailable = 1;
             var payloadSize = numBytesAvailable + 3;
 
-            await transactor.readResponse(rw, numBytesAvailable, payloadSize);
+            await protocol.readResponse(rw, numBytesAvailable, payloadSize);
 
             assert.strictEqual(rw.writeBuffer[1], 1, 'Expect second element of write buffer to be number of bytes requested for send')
         });
@@ -282,7 +282,7 @@ describe('bus transactor', () =>  {
             var numBytesAvailable = payload.length;
             var payloadSize = numBytesAvailable + 3;
 
-            var response = await transactor.readResponse(rw, numBytesAvailable, payloadSize);
+            var response = await protocol.readResponse(rw, numBytesAvailable, payloadSize);
 
             assert.strictEqual(response.toString(), payload.toString(), 'Response expected to contain read buffer payload');
 
@@ -315,7 +315,7 @@ describe('bus transactor', () =>  {
             payloadSlice.copy(rw.readBuffer, index);
             
 
-            var response = await transactor.readResponse(rw, numBytesAvailable, payloadSize);
+            var response = await protocol.readResponse(rw, numBytesAvailable, payloadSize);
             assert.strictEqual(rw.writeBufferIndex, 4, 'Write buffer not incremented to expected value');
             assert.strictEqual(rw.writeBuffer[0], 0, 'Write buffer expects read request byte');
             assert.strictEqual(rw.writeBuffer[1], payloadSize, 'Write buffer expects byte value of number of bytes to read in this request');
@@ -356,7 +356,7 @@ describe('bus transactor', () =>  {
             };
 
 
-            var reader = transactor.readResponse(rwHoldWrite, 11, 1, canceller);
+            var reader = protocol.readResponse(rwHoldWrite, 11, 1, canceller);
             canceller.cancel();
             p.resolve("closing wait promise");
 
