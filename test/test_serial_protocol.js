@@ -242,6 +242,17 @@ describe('bus transactor', () =>  {
 
         });
 
+        it('should hold version request string just fine', async () => {
+            rw.reset();
+            var payload = Buffer.from('{"req":"card.version"}\n');
+            var payloadSize = payload.length;
+
+            await protocol.sendRequest(rw, payload, payloadSize);
+
+            assert.strictEqual(rw.writeBuffer.slice(1,payload.length + 1).toString(), '{"req":"card.version"}\n', 'Payload value not in write buffer');
+
+        })
+
     });
 
     describe('readResponse', () => {

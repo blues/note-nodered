@@ -30,7 +30,6 @@ async function queryAvailableBytes(rw){
 async function sendRequest(rw, request, payloadSize, token={isCancelled:false}){
     const REQUEST_FRAME_HEADER_SIZE = 1;
     const chunkSize = payloadSize + REQUEST_FRAME_HEADER_SIZE;
-    
     const buffer = Buffer.alloc(chunkSize);
     
     var requestSlice = request.slice(0);
@@ -48,8 +47,7 @@ async function sendRequest(rw, request, payloadSize, token={isCancelled:false}){
         buffer[0] = bytesToSend;
         var numBytesToWrite = bytesToSend + REQUEST_FRAME_HEADER_SIZE;
         var numBytesWritten = await rw.write(numBytesToWrite, buffer);
-
-
+        
         requestSlice = requestSlice.slice(numBytesWritten - REQUEST_FRAME_HEADER_SIZE);
         bytesToSend = requestSlice.length;
     }
@@ -69,12 +67,7 @@ async function readResponse(rw, numBytesAvailable, payloadSize, token={isCancell
 
         var numBytesWritten = await rw.write(readRequest.length, readRequest);
 
-        
-        
-        
-    
         var numBytesToRead = numBytesRequested + RESPONSE_FRAME_HEADER_SIZE;
-        //numBytesToRead = (numBytesRead > chunkSize) ? chunkSize : numBytesToRead;
 
         var numBytesRead = await rw.read(numBytesToRead, readResponse);
         numBytesAvailable = readResponse[0];
