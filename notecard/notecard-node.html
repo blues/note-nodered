@@ -16,11 +16,11 @@
         <input type="hidden" id="node-input-payloadType">
     </div>
     <div class="form-row">
-        <label for="node-input-outputType"><i class="fa fa-dot-circle-o"></i> <span data-i18n="node-red:json.label.outputType">Response Type</span></label>
+        <label for="node-input-outputType"><i class="fa fa-dot-circle-o"></i> <span data-i18n="node-red:json.label.outputType">Output Type</span></label>
         <select style="width:70%" id="node-input-outputType">
-            <option value="" data-i18n="node-red:json.label.outputType.input">Same as Input</option>
-            <option value="obj" data-i18n="node-red:json.label.outputType.obj">Output as JavaScript Object</option>
-            <option value="str" data-i18n="node-red:json.label.outputType.str">Output as JSON String</option>
+            <option value="" data-i18n="node-red:json.label.outputType.input">Same as Payload</option>
+            <option value="json" data-i18n="node-red:json.label.outputType.obj">Output as JavaScript Object</option>
+            <option value="string" data-i18n="node-red:json.label.outputType.str">Output as JSON String</option>
         </select>
     </div>
 
@@ -44,12 +44,10 @@
         defaults: {
             name: {value:""},
             busno: {value:"1"},
-            address: {value:"",required:false},
-            command: {value:"", required:false},
+            address: {value:"0x17",required:false},
             payload: {value:"payload", required:false, validate: RED.validators.typedInput("payloadType")},
             payloadType: {value:"msg"},
             outputType: {value:"", required:false},
-            count: {value:"1", required:false}
         },
         color:"#E35253",
         inputs:1,

@@ -23,6 +23,7 @@ module.exports = function(RED) {
         var node = this;
 
         node.transactor = new transactor.I2CTransactor();
+        node.transactor.busNumber = node.busno;
         node.notecard = new notecard.Notecard(node.transactor);
         
 
@@ -43,17 +44,20 @@ module.exports = function(RED) {
             //var command = node.command;
             //if (isNaN(command)) command = msg.command;
             address = parseInt(address);
-            //command = parseInt(command);
-            var buffcount = parseInt(node.count);
-            if (isNaN(address)) {
-                this.status({fill:"red",shape:"ring",text:"Address ("+address+") value is missing or incorrect"});
-                return;
-            // } else if (isNaN(command) ) {
-            //     this.status({fill:"red",shape:"ring",text:"Command  ("+command+") value is missing or incorrect"});
-            //     return;
-            } else {
-                this.status({});
+            if(!isNaN(address)){
+                node.transactor.address = address;
             }
+            //command = parseInt(command);
+            // var buffcount = parseInt(node.count);
+            // if (isNaN(address)) {
+            //     this.status({fill:"red",shape:"ring",text:"Address ("+address+") value is missing or incorrect"});
+            //     return;
+            // // } else if (isNaN(command) ) {
+            // //     this.status({fill:"red",shape:"ring",text:"Command  ("+command+") value is missing or incorrect"});
+            // //     return;
+            // } else {
+                this.status({});
+            //}
 
             
             try {
@@ -74,11 +78,17 @@ module.exports = function(RED) {
 
                 // const f = async (r) => await node.notecard.request(r);
                 // const response = f(myPayload);
+                var convertOutput = (r) => r;
+                if(inputPayloadType === "string" && node.outputType === "json"){
+                    convertOutput = (r) => JSON.parse(r);
+                } else if (inputPayloadType === "object" && node.outputType === "string"){
+                    convertOutput = (r) => JSON.stringify(r);
+                }
 
                 const response = await node.notecard.request(myPayload);
 
                 msg = Object.assign({}, msg);
-                msg.payload = response;
+                msg.payload = convertOutput(response);
                 node.send(msg);
 
 
