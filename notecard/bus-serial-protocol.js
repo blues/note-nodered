@@ -54,8 +54,9 @@ async function sendRequest(rw, request, payloadSize, token={isCancelled:false}){
 
 }
 
+const RESPONSE_FRAME_HEADER_SIZE = 2;
 async function readResponse(rw, numBytesAvailable, payloadSize, token={isCancelled:false}){
-    const RESPONSE_FRAME_HEADER_SIZE = 2;
+    
     const chunkSize = payloadSize + RESPONSE_FRAME_HEADER_SIZE;
     var readRequest = Buffer.from([0, 0]);
     var readResponse = Buffer.alloc(chunkSize);
@@ -79,4 +80,10 @@ async function readResponse(rw, numBytesAvailable, payloadSize, token={isCancell
     return response;
 }
 
-module.exports = {queryAvailableBytes, sendRequest, readResponse};
+async function reset(rw, payloadSize){
+    
+    await readResponse(rw, payloadSize, payloadSize);
+    
+}
+
+module.exports = {queryAvailableBytes, sendRequest, readResponse, reset};

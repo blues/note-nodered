@@ -98,7 +98,7 @@ describe('buffer readwriter', () =>  {
 
 });
 
-describe('bus transactor', () =>  {
+describe('bus-serial-protocol', () =>  {
     describe('getAvailableBytes', () =>  {
         var rw = createReadWriter();
         rw.writeBuffer = Buffer.alloc(255);
@@ -377,6 +377,47 @@ describe('bus transactor', () =>  {
         });
 
     });
+
+    describe('reset', () => {
+        var rw = createReadWriter();
+        rw.writeBuffer = Buffer.alloc(255);
+        rw.readBuffer = Buffer.alloc(255);
+
+        var content = Buffer.from("a bunch of useless bytes\n that need to be flushed from buffer");
+        var index = 0;
+        var payloadSize = 11;
+        var numIterations = content.length / payloadSize;
+        var remainder = content.length;
+    
+        var i = 0;
+        for(i = 0; i< numIterations; i++){
+            rw.readBuffer[index++] = remainder;
+            rw.readBuffer[index++] = payloadSize;
+            content.copy(rw.readBuffer, index, 0, payloadSize);
+            index += payloadSize;
+
+            content = content.slice(payloadSize);
+            remainder = content.length;
+        }
+
+        
+        if(remainder > 0){
+            rw.readBuffer[index++] = 0;
+            rw.readBuffer[index++] = remainder;
+            content.copy(rw.readBuffer, index, 0);
+        }
+
+        it('should flush the responses from the read buffer', async () => {
+           
+            rw.readBufferIndex = 0;
+            await protocol.reset(rw, payloadSize);
+
+            var numBytes = rw.readBuffer[rw.readBufferIndex];
+
+            assert.equal(numBytes, 0, 'Number of bytes available for read is non-zero');
+
+        });
+    })
   
 });
 
