@@ -7,7 +7,7 @@
         /dev/i2c-<input id="node-input-busno" class="I2C-in-address" placeholder="[msg.bus]" min=0 max=7 style="width:40px; height:16px;">
     </div>
     <div class="form-row">
-        <label for="node-input-address"><i class="fa fa-address-card-o"></i> Bus Address</label>
+        <label for="node-input-address"><i class="fa fa-address-card-o"></i> Address</label>
         <input type="text" id="node-input-address" class="I2C-out-address" placeholder="[msg.address]" min=3 max=127>
     </div>
     <div class="form-row">
@@ -29,14 +29,65 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
- 
+
 <script type="text/html" data-help-name="notecard-request">
-    <p>Provides a connection to an outbound I2C address. NOTECARD REQUEST</p>
-    <p>Only the <code>msg.payload</code> is sent.</p>
-    <p>address <b>0</b> means that you will broadcast to all I2C-units on the I2C bus.</p>
-    <p>The <b>Send bytes</b> is used to set the number of bytes that will be used when the payload is a number.</p>
-    <p>The <b>payload</b> and <b>msg.payload</b> can be a Buffer, Array, String or Integer.</p>	
-</script>
+    <p>Send Notecard requests over an I2C connection on a Raspberry Pi or similar device</p>
+
+    <p><b>IMPORTANT:</b> still in alpha stage. Cannot handle simultaneous requests or overlapping requests to Notecard. Use only one Notecard Request Node, and consider using a "gated" queue on the Notecard request input such as <a href="https://flows.nodered.org/node/node-red-contrib-queue-gate">node-red-contrib-queue-gate</a> to prevent overlapping requests</p>
+
+    
+    <h3>Inputs</h3>
+        <dl class="message-properties">
+            <dt class="optional">payload 
+                <span class="property-type">JSON | string</span>
+            </dt>
+            <dd> request to send to Notecard. </dd>
+
+            <dt class="optional">address 
+                <span class="property-type"> string</span>
+            </dt>
+            <dd> address of the Notecard on the I2C bus. </dd>
+
+            <dt class="optional">topic <span class="property-type">string</span></dt>
+            <dd> not used by Notecard Request node.</dd>
+        </dl>
+    
+     <h3>Outputs</h3>
+        <dl class="message-properties">
+            <dt class="optional">payload 
+                <span class="property-type">JSON | string</span>
+            </dt>
+            <dd> response from the Notecard. By default data type matches that of the input <code>msg.payload</code></dd>
+        </dl>
+
+    <h3>Properties</h3>
+        <dl class="message-properties">
+            <dt>Bus Number 
+                <span class="property-type">number</span>
+            </dt>
+            <dd> I2C port number to use for Notecard transactions </dd>
+
+            <dt class="optional">Address 
+                <span class="property-type"> string</span>
+            </dt>
+            <dd> address of the Notecard on the I2C bus. This overrides the <code>address</code> field on the node input. </dd>
+
+            <dt class="optional">Payload <span class="property-type"> JSON | string</span></dt>
+            <dd> request to send to Notecard. This overrides the <code>payload</code> field on the node input.</dd>
+
+            <dt>Output Type</dt>
+            <dd>Converts Notecard responses to selected type when it is assigned to <code>msg.payload</code> on the node output </dd>
+        </dl>
+    
+    <!-- <h3>Details</h3> -->
+        
+    
+    <h3>References</h3>
+        <ul>
+            <li><a href="https://dev.blues.io/reference/complete-api-reference/introduction/">Notecard API Doc</a> - full reference to Notecard API</li>
+            <li><a href="https://dev.blues.io/reference/notecard-walkthrough/json-fundamentals/">Notecard JSON</a> - Notecard and JSON behavior</li>
+        </ul>
+    </script>
 
 <script type="text/javascript">
     RED.nodes.registerType('notecard-request', {
