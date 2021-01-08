@@ -28,6 +28,7 @@ class BufferReadWriter {
         newIndex = (newIndex > this.writeBuffer.length) ? this.writeBuffer.length : newIndex;
 
         inputBuffer.copy(this.writeBuffer, this.writeBufferIndex);
+        this.writeBufferIndex = newIndex;
     }
 
     reset(){
@@ -80,10 +81,6 @@ class InMemTransactor {
 
 
 
-
-
-
-
 var assert = require('assert');
 
 const notecard = require('../notecard/notecard.js');
@@ -125,12 +122,40 @@ describe('notecard', () =>  {
 
         it('should write a terminating character at the end of the request', async () => {
             rw.reset();
-            const request = {req:"card.status"};
+            const requestStr = `{"req":"card.status"}`;
+            //const length = requestStr.length;
             rw.readBuffer = Buffer.from('{}');
 
+            var terminatorIndex = 0;
+            // Test with String Input
+            await nc.request(requestStr);
+            terminatorIndex = rw.writeBufferIndex - 1;
+
+            assert.strictEqual(rw.writeBuffer[terminatorIndex], 0x0a, 'Did not send a terminating character with string input');
+
+            // Test with JSON object
+            rw.reset();
+            rw.readBuffer = Buffer.from('{}');
+
+            const request = JSON.parse(requestStr);
             await nc.request(request);
-            const requestLength = JSON.stringify(request).length;
-            assert.strictEqual(rw.writeBuffer[requestLength], 0x0a, 'Did not send a terminating character');
+
+            terminatorIndex = rw.writeBufferIndex - 1;
+            assert.strictEqual(rw.writeBuffer[terminatorIndex], 0x0a, 'Did not send a terminating character with JSON input');
+            
+            
+        });
+
+        it('should permit use of JSON string requests and provide response as JSON string', async () => {
+            rw.reset();
+            const request = `{"req":"card.status"}`
+            const responseString = '{"usb":true,"connected":true,"status":"{normal}","storage":2,"time":1609548654}'
+            rw.readBuffer = Buffer.from(responseString + '\r\n');
+
+            const response = await nc.request(request);
+
+            assert.strictEqual(response, responseString, 'Did not return expected response');
+
         });
 
         
@@ -138,18 +163,18 @@ describe('notecard', () =>  {
 
     });
 
-    describe('using real notecard', () => {
-        const i2c = require('../notecard/i2c-transactor.js');
-        const nc = new notecard.Notecard(new i2c.I2CTransactor());
+    // describe('using real notecard', () => {
+    //     const i2c = require('../notecard/i2c-transactor.js');
+    //     const nc = new notecard.Notecard(new i2c.I2CTransactor());
 
-        it('should make a real request!', async () => {
-            const request = {req:"card.status"};
-            const response = await nc.request(request);
-            console.log(response);
+    //     it('should make a real request!', async () => {
+    //         const request = {req:"card.status"};
+    //         const response = await nc.request(request);
+    //         console.log(response);
 
-        });
+    //     });
 
-    });
+    // });
 
 
    

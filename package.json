@@ -5,13 +5,13 @@
     "dependencies": {
         "i2c-bus": "^5.2.0"
     },
-    "main": "notecard/notecard.js",
+    "main": "notecard/notecard-node.js",
     "scripts": {
         "test": "mocha"
     },
     "node-red": {
         "nodes": {
-            "notecard": "notecard/notecard.js"
+            "notecard-request": "notecard/notecard-node.js"
         }
     },
     "devDependencies": {
