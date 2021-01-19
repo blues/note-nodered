@@ -91,6 +91,60 @@ describe('Notecard Node', function() {
         })
 
     });
+
+    const flowWithHelper = [{ id: "n1", type: "notecard-request", name: "Notecard Request", wires:[["n2"]] },
+                            { id: "n2", type:"helper"}];
+    it('should output JSON object if input is JSON and output type is set to JSON', (done) => {
+        expectedResponse = {field1: "value1"};
+        var rw = new transactor.BufferReadWriter(255, 255);
+        rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + '\n');
+
+        var t = new BusMockTransactor(rw);
+
+        helper.load(ncNode, flowWithHelper, () => {
+            const n1 = helper.getNode("n1");
+            n1.outputType = 'json';
+            const n2 = helper.getNode("n2");
+            n1.notecard.transactor = t;
+
+            n2.on('input', (msg) => {
+                try{
+                    assert.deepEqual(msg.payload, expectedResponse);
+                    done()
+                } catch (err){
+                    done(err);
+                }
+            });
+
+            n1.receive({inputfield:"inputValue"});
+        });
+    });
+
+    it('should output JSON object if input is string and output type is set to JSON', (done) => {
+        expectedResponse = {field1: "value1"};
+        var rw = new transactor.BufferReadWriter(255, 255);
+        rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + '\n');
+
+        var t = new BusMockTransactor(rw);
+
+        helper.load(ncNode, flowWithHelper, () => {
+            const n1 = helper.getNode("n1");
+            n1.outputType = 'json';
+            const n2 = helper.getNode("n2");
+            n1.notecard.transactor = t;
+
+            n2.on('input', (msg) => {
+                try{
+                    assert.deepEqual(msg.payload, expectedResponse);
+                    done()
+                } catch (err){
+                    done(err);
+                }
+            });
+
+            n1.receive('"inputfield":"inputValue"}');
+        });
+    });
     
     
 });
