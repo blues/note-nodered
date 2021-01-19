@@ -7,8 +7,10 @@ const transactor = require('../notecard/i2c-transactor.js');
 describe('i2ctransactor', () =>  {
     describe('constructor', () =>  {
         
-        it('should do something', async function (){
+        it('should have correct default values', function (){
            let t = new transactor.I2CTransactor();
+           assert.strictEqual(t.address, 0x17);
+           assert.strictEqual(t.busNumber, 1);
         });
 
 
