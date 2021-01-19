@@ -97,7 +97,7 @@ describe('Notecard Node', function() {
     const flowWithHelper = [{ id: "n1", type: "notecard-request", name: "Notecard Request",outputType:"", wires:[["n2"]] },
                             { id: "n2", type:"helper"}];
     describe('node output type set to JSON', () => {
-        expectedResponse = {field1: "value1"};
+        var expectedResponse = {field1: "value1"};
         var rw = new transactor.BufferReadWriter(255, 255);
         rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + NotecardMessageTerminator);
 
@@ -133,34 +133,91 @@ describe('Notecard Node', function() {
             startFlowWithMessage('{"inputfield":"inputValue"}', done);
         });
 
-        // it('should output JSON object if input is string and output type is set to JSON', (done) => {
-        //     expectedResponse = {field1: "value1"};
-        //     var rw = new transactor.BufferReadWriter(255, 255);
-        //     rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + '\n');
-
-        //     var t = new BusMockTransactor(rw);
-
-        //     helper.load(ncNode, flowWithHelper, () => {
-        //         const n1 = helper.getNode("n1");
-        //         n1.outputType = 'json';
-        //         const n2 = helper.getNode("n2");
-        //         n1.notecard.transactor = t;
-
-        //         n2.on('input', (msg) => {
-        //             try{
-        //                 assert.deepEqual(msg.payload, expectedResponse);
-        //                 done()
-        //             } catch (err){
-        //                 done(err);
-        //             }
-        //         });
-
-        //         n1.receive('"inputfield":"inputValue"}');
-        //     });
-        // });
     });
 
-    it('should override message payload with populated payload property' (done) => {
+    describe('node output type set to string', () => {
+        var expectedResponse = '{"field1":"value1"}';
+        var rw = new transactor.BufferReadWriter(255, 255);
+        rw.readBuffer = Buffer.from(expectedResponse + NotecardMessageTerminator);
+
+        var t = new BusMockTransactor(rw);
+        var outputType = 'string';
+        var startFlowWithMessage  = (msg, done) => {
+            helper.load(ncNode, flowWithHelper, () => {
+                const n1 = helper.getNode("n1");
+                const n2 = helper.getNode("n2");
+                n1.outputType = outputType;
+                n1.notecard.transactor = t;
+                
+                n2.on('input', (msg) => {
+                    try{
+                        assert.strictEqual(msg.payload, expectedResponse);
+                        done()
+                    } catch (err){
+                        done(err);
+                    }
+                });
+
+                n1.receive({payload:msg});
+            });
+        };
+       
+        it('should output string object if input is JSON', (done) => {
+            rw.readBufferIndex = 0;
+            startFlowWithMessage({inputfield:"inputValue"}, done);
+        });
+
+        it('should output string object if input is string', (done) => {
+            rw.readBufferIndex = 0;
+            startFlowWithMessage('{"inputfield":"inputValue"}', done);
+        });
+
+    });
+
+    describe('node output type set to ""', () => {
+        
+        var rw = new transactor.BufferReadWriter(255, 255);
+        
+
+        var t = new BusMockTransactor(rw);
+        var outputType = '';
+        var startFlowWithMessageAndCheckResult  = (msg, expectedResponse, done) => {
+            helper.load(ncNode, flowWithHelper, () => {
+                const n1 = helper.getNode("n1");
+                const n2 = helper.getNode("n2");
+                n1.outputType = outputType;
+                n1.notecard.transactor = t;
+                
+                n2.on('input', (msg) => {
+                    try{
+                        assert.deepEqual(msg.payload, expectedResponse);
+                        done()
+                    } catch (err){
+                        done(err);
+                    }
+                });
+
+                n1.receive({payload:msg});
+            });
+        };
+       
+        it('should output string object if input is JSON', (done) => {
+            rw.readBufferIndex = 0;
+            var expectedResponse = {field1: "value1"};
+            rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + NotecardMessageTerminator);
+            startFlowWithMessageAndCheckResult({inputfield:"inputValue"}, expectedResponse, done);
+        });
+
+        it('should output string object if input is string', (done) => {
+            rw.readBufferIndex = 0;
+            var expectedResponse = '{"field1":"value1"}';
+            rw.readBuffer = Buffer.from(expectedResponse + NotecardMessageTerminator);
+            startFlowWithMessageAndCheckResult('{"inputfield":"inputValue"}', expectedResponse, done);
+        });
+
+    });
+
+    it('should override message payload with populated payload property', (done) => {
         assert.fail()
     });
     
