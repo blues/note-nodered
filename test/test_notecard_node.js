@@ -159,6 +159,10 @@ describe('Notecard Node', function() {
         //     });
         // });
     });
+
+    it('should override message payload with populated payload property' (done) => {
+        assert.fail()
+    });
     
     
 });
