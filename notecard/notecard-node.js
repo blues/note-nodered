@@ -43,7 +43,7 @@ module.exports = function(RED) {
             if (isNaN(address)) address = msg.address;
             address = parseInt(address);
             if(!isNaN(address)){
-                node.transactor.address = address;
+                node.notecard.transactor.address = address;
             }
             this.status({});
             

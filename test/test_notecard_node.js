@@ -4,14 +4,18 @@ const assert = require('assert');
 const should = require("should");
 const helper = require("node-red-node-test-helper");
 const ncNode = require('../notecard/notecard-node.js');
-// const transactor = require('./inmem_transactor.js');
+const transactor = require('./inmem_transactor.js');
 
-// class BusMockTransactor extends transactor.InMemTransactor{
-//     constructor(readWriter){
-//         super(readWriter);
-//         this.address = null;
-//     }
-// }
+class BusMockTransactor extends transactor.InMemTransactor{
+    address;
+    busNumber;
+
+    constructor(readWriter){
+        super(readWriter);
+        this.address = null;
+        this.busNumber = null;
+    }
+}
 
 
 helper.init(require.resolve('node-red'));
@@ -50,12 +54,14 @@ describe('Notecard Node', function() {
     });
 
     it('should use msg.address field value if node address field is not populated', (done) => {
+        var transactor = new BusMockTransactor();
         helper.load(ncNode, flow, () => {
             const n1 = helper.getNode("n1");
+            n1.notecard.transactor = transactor;
             
             n1.on('input', () => {
                 try{
-                    should.equal(n1.notecard.transactor.address, 0x19);
+                    should.equal(transactor.address, 0x19);
                     done();
                 } catch (err) {
                     done(err);
@@ -67,8 +73,11 @@ describe('Notecard Node', function() {
     });
 
     it('should override msg.address field value with node address field value', (done) => {
+        var transactor = new BusMockTransactor();
         helper.load(ncNode, flow, () => {
             const n1 = helper.getNode("n1");
+            n1.notecard.transactor = transactor;
+
             n1.address = 0x27;
             n1.on('input', () => {
                 try{
