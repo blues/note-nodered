@@ -6,6 +6,8 @@ const helper = require("node-red-node-test-helper");
 const ncNode = require('../notecard/notecard-node.js');
 const transactor = require('./inmem_transactor.js');
 
+const NotecardMessageTerminator = '\r\n';
+
 class BusMockTransactor extends transactor.InMemTransactor{
     address;
     busNumber;
@@ -92,22 +94,22 @@ describe('Notecard Node', function() {
 
     });
 
-    const flowWithHelper = [{ id: "n1", type: "notecard-request", name: "Notecard Request", wires:[["n2"]] },
+    const flowWithHelper = [{ id: "n1", type: "notecard-request", name: "Notecard Request",outputType:"", wires:[["n2"]] },
                             { id: "n2", type:"helper"}];
     describe('node output type set to JSON', () => {
-        it('should output JSON object if input is JSON and output type is set to JSON', (done) => {
-            expectedResponse = {field1: "value1"};
-            var rw = new transactor.BufferReadWriter(255, 255);
-            rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + '\n');
+        expectedResponse = {field1: "value1"};
+        var rw = new transactor.BufferReadWriter(255, 255);
+        rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + NotecardMessageTerminator);
 
-            var t = new BusMockTransactor(rw);
-
+        var t = new BusMockTransactor(rw);
+        var outputType = 'json';
+        var startFlowWithMessage  = (msg, done) => {
             helper.load(ncNode, flowWithHelper, () => {
                 const n1 = helper.getNode("n1");
-                n1.outputType = 'json';
                 const n2 = helper.getNode("n2");
+                n1.outputType = outputType;
                 n1.notecard.transactor = t;
-
+                
                 n2.on('input', (msg) => {
                     try{
                         assert.deepEqual(msg.payload, expectedResponse);
@@ -117,35 +119,45 @@ describe('Notecard Node', function() {
                     }
                 });
 
-                n1.receive({inputfield:"inputValue"});
+                n1.receive({payload:msg});
             });
+        };
+       
+        it('should output JSON object if input is JSON', (done) => {
+            rw.readBufferIndex = 0;
+            startFlowWithMessage({inputfield:"inputValue"}, done);
         });
 
-        it('should output JSON object if input is string and output type is set to JSON', (done) => {
-            expectedResponse = {field1: "value1"};
-            var rw = new transactor.BufferReadWriter(255, 255);
-            rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + '\n');
-
-            var t = new BusMockTransactor(rw);
-
-            helper.load(ncNode, flowWithHelper, () => {
-                const n1 = helper.getNode("n1");
-                n1.outputType = 'json';
-                const n2 = helper.getNode("n2");
-                n1.notecard.transactor = t;
-
-                n2.on('input', (msg) => {
-                    try{
-                        assert.deepEqual(msg.payload, expectedResponse);
-                        done()
-                    } catch (err){
-                        done(err);
-                    }
-                });
-
-                n1.receive('"inputfield":"inputValue"}');
-            });
+        it('should output JSON object if input is string', (done) => {
+            rw.readBufferIndex = 0;
+            startFlowWithMessage('{"inputfield":"inputValue"}', done);
         });
+
+        // it('should output JSON object if input is string and output type is set to JSON', (done) => {
+        //     expectedResponse = {field1: "value1"};
+        //     var rw = new transactor.BufferReadWriter(255, 255);
+        //     rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + '\n');
+
+        //     var t = new BusMockTransactor(rw);
+
+        //     helper.load(ncNode, flowWithHelper, () => {
+        //         const n1 = helper.getNode("n1");
+        //         n1.outputType = 'json';
+        //         const n2 = helper.getNode("n2");
+        //         n1.notecard.transactor = t;
+
+        //         n2.on('input', (msg) => {
+        //             try{
+        //                 assert.deepEqual(msg.payload, expectedResponse);
+        //                 done()
+        //             } catch (err){
+        //                 done(err);
+        //             }
+        //         });
+
+        //         n1.receive('"inputfield":"inputValue"}');
+        //     });
+        // });
     });
     
     
