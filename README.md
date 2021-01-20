@@ -27,12 +27,13 @@ _Communication Settings_
 To communicate with the Notecard, the I2C bus number must be set to the port number being used by the I2C module on the Raspberry Pi.  It is a value between [0, 7] inclusive.
 
 The default address for the Notecard is 0x17 (23).  If that has been changed, then set the address value to the new Notecard address.
-
+![Communication Settings](images/notecard_request_comms_properties.png)
 
 ### Sending Notecard Requests
 The `Notecard Request` node accepts Notecard requests formed as JSON object, or as a JSON string.
 
 Set the value of the input  `msg.payload` to a Notecard request.
+![Message Payload](images/notecard_request_payload.png)
 
 The response will be provided on the `Notecard Request` output in the `msg.payload` field.
 
