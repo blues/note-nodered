@@ -50,17 +50,14 @@ module.exports = function(RED) {
 
             
             try {
-                // if (this.payloadType == null) {
-                //     console.log('payloadtype is  null')
-                //     myPayload = this.payload;
-                // } else if (this.payloadType == 'none') {
-                //     myPayload = null;
-                // } else {
-                    
-                //     myPayload = RED.util.evaluateNodeProperty(this.payload, this.payloadType, this,msg);
-                // }
-                myPayload = msg.payload
-                if (myPayload == null || node.count == 0) {
+                
+                myPayload = RED.util.evaluateNodeProperty(this.payload, this.payloadType, this,msg);
+                
+                if(!myPayload){
+                    myPayload = msg.payload;
+                }
+                
+                if (myPayload == null) {
                     node.error(Error("payload is null or empty"))
                 }
                 inputPayloadType = typeof myPayload
@@ -75,7 +72,7 @@ module.exports = function(RED) {
                 } else if (inputPayloadType === "object" && node.outputType === "string"){
                     convertOutput = (r) => JSON.stringify(r);
                 }
-
+                
                 const response = await node.notecard.request(myPayload);
                 
                 msg = Object.assign({}, msg);

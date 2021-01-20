@@ -217,9 +217,39 @@ describe('Notecard Node', function() {
 
     });
 
-    it('should override message payload with populated payload property', (done) => {
-        assert.fail()
+    describe('payload set to JSON object', () => {
+        
+        it('should override msg.payload field value with node Payload field value if is populated', (done) => {
+            var rw = new transactor.BufferReadWriter(0, 255);
+            rw.readBuffer = Buffer.from("{}" + NotecardMessageTerminator);
+            var getWriteBufferString = () => rw.writeBuffer.slice(0, rw.writeBufferIndex).toString().trim();
+
+            var t = new BusMockTransactor(rw);
+            helper.load(ncNode, flowWithHelper, () => {
+                const n1 = helper.getNode("n1");
+                const n2 = helper.getNode("n2");
+                n1.notecard.transactor = t;
+                n1.payload = {nodePayload:"nodeValue"};
+                n1.payloadType = null
+                n2.on('input', () => {
+                    try{
+                        
+                        var actualRequest = getWriteBufferString();
+                        should.equal(actualRequest, JSON.stringify(n1.payload));
+                        done();
+                    } catch (err) {
+                        done(err);
+                    }
+                });
+                var p = {msgPayload:"msgValue"};
+                n1.receive({payload:p});
+            })
+    
+        });
+
     });
+
+    
     
     
 });
