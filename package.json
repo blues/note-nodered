@@ -1,20 +1,12 @@
 {
     "name": "node-red-contrib-notecard",
     "version": "0.0.2",
-<<<<<<< HEAD
     "description": "A Node-RED node to talk to the Notecard via Raspberry PI's I2C port",
-=======
-    "description": "A Node-RED node to talk to the Notecard via Raspiberry PI's I2C port",
->>>>>>> 889b12ff147fabbcacfc992269da4b6747292557
     "license": "MIT",
     "dependencies": {
         "i2c-bus": "^5.2.0"
     },
-<<<<<<< HEAD
     "repository":{
-=======
-    "repository"{
->>>>>>> 889b12ff147fabbcacfc992269da4b6747292557
          "type":"git",
          "url": "git+https://github.com/blues/note-nodered.git",
     },
