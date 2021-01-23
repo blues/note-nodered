@@ -13,6 +13,20 @@ describe('i2ctransactor', () =>  {
            assert.strictEqual(t.busNumber, 1);
         });
 
+        it('should have correct address when passed in as config', () => {
+            const c = {address: 0x19};
+            const t = new transactor.I2CTransactor(c);
+
+            assert.strictEqual(t.address, c.address, "Address does not match provided configuration");
+        });
+
+        it('should have correct busNumber port when passed in as config', () => {
+            const c = {busNumber: 5};
+            const t = new transactor.I2CTransactor(c);
+
+            assert.strictEqual(t.busNumber, c.busNumber, "Bus number does not match provided configuration");
+        });
+
 
     });
 
