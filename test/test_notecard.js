@@ -39,6 +39,39 @@ class BufferReadWriter {
     }
 }
 
+class DelimitedBufferReadWriter extends BufferReadWriter{
+
+    delimiter;
+
+    constructor (readBufferSize = 0, writeBufferSize = 0, delimiter = '\r\n'){
+        super(readBufferSize, writeBufferSize);
+        this.delimiter = delimiter;
+    }
+
+    get delimiterLength() {
+        return this.delimiter.length;
+    }
+
+    read(){
+        if(this.readBufferIndex >= this.readBuffer.length){
+            throw('Attempt to read data beyond scope of buffer');
+        }
+
+        var endIndex = this.readBuffer.length;
+        const delimiterIndex = this.readBuffer.slice(this.readBufferIndex).indexOf(this.delimiter);
+        if(delimiterIndex >= 0) {
+            endIndex = this.readBufferIndex + delimiterIndex + this.delimiterLength;
+        } 
+
+        const slice = this.readBuffer.slice(this.readBufferIndex, endIndex);
+        this.readBufferIndex = endIndex;
+
+        return slice;
+    }
+
+
+}
+
 class InMemTransactor {
 
     rw;
@@ -102,6 +135,9 @@ describe('notecard', () =>  {
         const rw = new BufferReadWriter(0, 255);
         const nc = new notecard.Notecard(new InMemTransactor(rw));
         
+        beforeEach(function () {
+            nc.transactor.open();
+        });
 
         it('should return the expected response as a JSON object', async () => {
             rw.reset();
@@ -158,9 +194,70 @@ describe('notecard', () =>  {
 
         });
 
+
+    });
+
+    describe('request - multiple simultaneous requests', () => {
+        const rw = new DelimitedBufferReadWriter(0, 255);
+        const nc = new notecard.Notecard(new InMemTransactor(rw));
+        nc.transactor.open();
+        it('should return responses to correct requests', async () => {
+            const request1 = '{"request":1}\n';
+            const request2 = '{"request":2}\n';
+
+            const expectedResponse1 = '{"response":1}';
+            const expectedResponse2 = '{"response":2}';
+            
+            rw.reset();
+            const responseStr = expectedResponse1 + '\r\n' + expectedResponse2 + '\r\n';
+            rw.readBuffer = Buffer.from(responseStr);
+
+            const p1 = nc.request(request1);
+            const p2 = nc.request(request2);
+            
+            const response2 = await p2;
+            
+            assert.strictEqual(response2, expectedResponse2);
+            
+
+        });
+    });
+
+    describe('connect', () => {
+        it('should open transactor', async () => {
+            const nc = new notecard.Notecard(new InMemTransactor());
+            assert.strictEqual(nc.transactor.isOpen, false, 'Transactor should not be open prior to calling "connect" method');
+            nc.connect();
+
+            assert.strictEqual(nc.transactor.isOpen, true, 'Transactor isOpen flag not "true"');
+        });
+
+        it('should not fail if transactor is open already', async () => {
+            const nc = new notecard.Notecard(new InMemTransactor());
+            nc.transactor.open();
+
+            nc.connect();
+        });
         
+    });
 
+    describe('disconnect', () => {
+        it('should close transactor', async () => {
+            const nc = new notecard.Notecard(new InMemTransactor());
+            nc.transactor.open();
+            assert.ok(nc.transactor.isOpen, 'Transactor should be open prior to calling "disconnect" method');
+            nc.disconnect();
 
+            assert.ok(!nc.transactor.isOpen, 'Transactor isOpen flag not "false"');
+        });
+
+        it('should not fail if transactor is closed already', async () => {
+            const nc = new notecard.Notecard(new InMemTransactor());
+            nc.transactor.close();
+
+            nc.disconnect();
+        });
+        
     });
 
     // describe('using real notecard', () => {

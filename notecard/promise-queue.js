@@ -1,14 +1,29 @@
 
 
 class PromiseQueue {
-    pending = false;
+    pending = null;
     _queue = [];
+    _next = null;
 
-    add(p){ return this.enqueue(p)}
+    push(obj) {
+        this._queue.push(obj);
+    }
 
-    enqueue(promise) {
+    shift() {
+        return this._queue.shift();
+    }
+
+    add(g) { 
+        return this.enqueue(g)
+    }
+
+    enqueue(promiseGenerator) {
+        if(typeof promiseGenerator !== 'function') {
+            const err = new TypeError('Input argument must be a function');
+            throw(err);
+        }
         const f = (resolve, reject) => {
-            this._queue.push({promise, resolve, reject});
+            this.push({promiseGenerator, resolve, reject});
             this.dequeue();
         };
 
@@ -20,19 +35,30 @@ class PromiseQueue {
             return false;
         }
 
-        const next = this._queue.shift();
+        const next = this.shift();
         if (!next) {
             return false;
         }
         
-        this.pending = true;
-        next.promise
+        this.pending = next;
+        const promise = next.promiseGenerator();
+        promise
             .then( v => next.resolve(v))
             .catch( err => next.reject(err))
             .finally( () => {
-                this.pending = false;
+                this.pending = null;
                 this.dequeue();
             });
+    }
+
+    async clear () {
+        if(this.pending){
+            this.pending.reject(new Error('flushing queue'));
+        }
+        this._queue.forEach((v) => {
+            v.reject(new Error('flushing queue'))
+        });
+        
     }
 }
 

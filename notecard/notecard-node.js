@@ -27,7 +27,7 @@ module.exports = function(RED) {
         node.notecard = new notecard.Notecard(node.transactor);
         
 
-    
+        node.notecard.connect();
 
 
         node.on("close", function() {
@@ -72,9 +72,8 @@ module.exports = function(RED) {
                 } else if (inputPayloadType === "object" && node.outputType === "string"){
                     convertOutput = (r) => JSON.stringify(r);
                 }
-                
                 const response = await node.notecard.request(myPayload);
-                
+
                 msg = Object.assign({}, msg);
                 msg.payload = convertOutput(response);
                 

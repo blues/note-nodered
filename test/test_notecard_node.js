@@ -109,6 +109,7 @@ describe('Notecard Node', function() {
                 const n2 = helper.getNode("n2");
                 n1.outputType = outputType;
                 n1.notecard.transactor = t;
+                n1.notecard.connect();
                 
                 n2.on('input', (msg) => {
                     try{
@@ -148,6 +149,7 @@ describe('Notecard Node', function() {
                 const n2 = helper.getNode("n2");
                 n1.outputType = outputType;
                 n1.notecard.transactor = t;
+                n1.notecard.connect();
                 
                 n2.on('input', (msg) => {
                     try{
@@ -187,6 +189,7 @@ describe('Notecard Node', function() {
                 const n2 = helper.getNode("n2");
                 n1.outputType = outputType;
                 n1.notecard.transactor = t;
+                n1.notecard.connect();
                 
                 n2.on('input', (msg) => {
                     try{
@@ -229,6 +232,7 @@ describe('Notecard Node', function() {
                 const n1 = helper.getNode("n1");
                 const n2 = helper.getNode("n2");
                 n1.notecard.transactor = t;
+                n1.notecard.connect();
                 n1.payload = {nodePayload:"nodeValue"};
                 n1.payloadType = null
                 n2.on('input', () => {

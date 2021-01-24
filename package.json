@@ -25,7 +25,8 @@
     "devDependencies": {
         "mocha": "^8.2.1",
         "node-red": "^1.2.7",
-        "node-red-node-test-helper": "^0.2.5"
+        "node-red-node-test-helper": "^0.2.5",
+        "sinon": "^9.2.4"
     },
     "bugs": {
         "email": "support@blues.com"

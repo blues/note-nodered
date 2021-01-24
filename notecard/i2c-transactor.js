@@ -81,6 +81,9 @@ class I2CTransactor {
     }
 
     async doTransaction(messageBuffer){
+        if(!this.isOpen){
+            throw 'Transactor channel not open. Cannot communicate with Notecard';
+        }
         
         var response = Buffer.alloc(0);
         

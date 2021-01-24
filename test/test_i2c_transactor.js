@@ -86,9 +86,11 @@ describe('i2ctransactor', () =>  {
 
     
     describe('doTransaction', () => {
-        const i2c = new transactor.I2CTransactor();
+        
         
         it('should respond to version request', async () => {
+            const i2c = new transactor.I2CTransactor();
+
             await i2c.open();
             await i2c.reset();
 
@@ -98,6 +100,18 @@ describe('i2ctransactor', () =>  {
 
             await i2c.close();
             assert.ok(response.toString().includes('"name":"Blues Wireless Notecard"'));
+        });
+
+        it('should throw error if i2c channel is not open', async () => {
+            const i2c = new transactor.I2CTransactor();
+            try {
+                const r = await i2c.doTransaction('random-input');
+
+            }catch (err){
+                assert.strictEqual(err, 'Transactor channel not open. Cannot communicate with Notecard');
+                return
+            }
+            assert.fail('Expected error, but did not receive one');
         });
             
     });
