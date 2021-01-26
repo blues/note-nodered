@@ -1,66 +1,103 @@
 [
-    {
-        "id": "20541f35.8195f",
-        "type": "inject",
-        "z": "9c856114.8bb6c",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "{\"req\":\"card.version\"}",
-        "payloadType": "json",
-        "x": 190,
-        "y": 220,
-        "wires": [
-            [
-                "3b130ac2.c4ab06"
+    [
+        {
+            "id": "20541f35.8195f",
+            "type": "inject",
+            "z": "9c856114.8bb6c",
+            "name": "",
+            "props": [
+                {
+                    "p": "payload"
+                },
+                {
+                    "p": "topic",
+                    "vt": "str"
+                }
+            ],
+            "repeat": "",
+            "crontab": "",
+            "once": false,
+            "onceDelay": 0.1,
+            "topic": "",
+            "payload": "{\"req\":\"card.version\"}",
+            "payloadType": "json",
+            "x": 190,
+            "y": 220,
+            "wires": [
+                [
+                    "f7c7c664.857098"
+                ]
             ]
-        ]
-    },
-    {
-        "id": "2c2b9d9a.d11612",
-        "type": "debug",
-        "z": "9c856114.8bb6c",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 610,
-        "y": 220,
-        "wires": []
-    },
-    {
-        "id": "3b130ac2.c4ab06",
-        "type": "notecard-request",
-        "z": "9c856114.8bb6c",
-        "name": "",
-        "busno": "1",
-        "address": "0x17",
-        "payload": "payload",
-        "payloadType": "msg",
-        "outputType": "",
-        "x": 410,
-        "y": 220,
-        "wires": [
-            [
-                "2c2b9d9a.d11612"
+        },
+        {
+            "id": "2c2b9d9a.d11612",
+            "type": "debug",
+            "z": "9c856114.8bb6c",
+            "name": "",
+            "active": true,
+            "tosidebar": true,
+            "console": false,
+            "tostatus": false,
+            "complete": "payload",
+            "targetType": "msg",
+            "statusVal": "",
+            "statusType": "auto",
+            "x": 610,
+            "y": 220,
+            "wires": []
+        },
+        {
+            "id": "88bcd359.af25a",
+            "type": "inject",
+            "z": "9c856114.8bb6c",
+            "name": "",
+            "props": [
+                {
+                    "p": "payload"
+                },
+                {
+                    "p": "topic",
+                    "vt": "str"
+                }
+            ],
+            "repeat": "",
+            "crontab": "",
+            "once": false,
+            "onceDelay": 0.1,
+            "topic": "",
+            "payload": "{\"req\":\"card.status\"}",
+            "payloadType": "json",
+            "x": 190,
+            "y": 280,
+            "wires": [
+                [
+                    "f7c7c664.857098"
+                ]
             ]
-        ]
-    }
+        },
+        {
+            "id": "f7c7c664.857098",
+            "type": "notecard-request",
+            "z": "9c856114.8bb6c",
+            "notecard": "c42e9f75.5c506",
+            "name": "",
+            "payload": "payload",
+            "payloadType": "msg",
+            "outputType": "",
+            "x": 410,
+            "y": 220,
+            "wires": [
+                [
+                    "2c2b9d9a.d11612"
+                ]
+            ]
+        },
+        {
+            "id": "c42e9f75.5c506",
+            "type": "notecard-config",
+            "name": "default",
+            "busno": "1",
+            "address": "0x17"
+        }
+    ]
 ]

@@ -3,96 +3,73 @@ const notecard = require('./notecard.js');
 const transactor = require('./i2c-transactor.js')
 
 
-const defaultI2CPort = 1;
-const defaultNotecardAddress = 0x17;
+const DEFAULT_I2C_BUS_NUMBER = 1;
+
+const DEFAULT_NOTECARD_I2C_ADDRESS = 0x17;
 
 module.exports = function(RED) {
     "use strict";
     
-
-    
-
-    // The Output Node
-    function NotecardRequestNode(n) {
-        RED.nodes.createNode(this, n);
-        this.busno = isNaN(parseInt(n.busno)) ? 1 : parseInt(n.busno);
-        this.address = parseInt(n.address);
-        this.payload = n.payload;
-        this.payloadType = n.payloadType;
-        this.outputType = n.outputType;
-        var node = this;
-
-        node.transactor = new transactor.I2CTransactor();
-        node.transactor.busNumber = node.busno;
-        node.notecard = new notecard.Notecard(node.transactor);
+    class NotecardConfigNode {
         
+        constructor(config){
+            RED.nodes.createNode(this, config);
 
-        node.notecard.connect();
+            const t = new transactor.I2CTransactor();
+            this.notecard = new notecard.Notecard(t);
 
-
-        node.on("close", function() {
-            node.transactor.close();
-        });
-
-       
-
-        node.on("input", async function(msg) {
-            var myPayload;
-            var inputPayloadType = ""
-            var address = node.address;
-            if (isNaN(address)) address = msg.address;
-            address = parseInt(address);
-            if(!isNaN(address)){
-                node.notecard.transactor.address = address;
-            }
-            this.status({});
-            
-
-            
-            try {
-                
-                myPayload = RED.util.evaluateNodeProperty(this.payload, this.payloadType, this,msg);
-                
-                if(!myPayload){
-                    myPayload = msg.payload;
-                }
-                
-                if (myPayload == null) {
-                    node.error(Error("payload is null or empty"))
-                }
-                inputPayloadType = typeof myPayload
-                if (inputPayloadType !== "object"  && inputPayloadType !== "string"){
-                    node.error("Unsupported input type. Must be string or JSON object")
-                }
-
-                var convertOutput = (r) => r;
-                if(inputPayloadType === "string" && node.outputType === "json"){
-                    convertOutput = (r) => JSON.parse(r);
-                    
-                } else if (inputPayloadType === "object" && node.outputType === "string"){
-                    convertOutput = (r) => JSON.stringify(r);
-                }
-                const response = await node.notecard.request(myPayload);
-
-                msg = Object.assign({}, msg);
-                msg.payload = convertOutput(response);
-                
-                node.send(msg);
-
-
-               
-                
-            } catch(err) {
-                this.error(err,msg);
-                return
+            var busNumber = parseInt(config.busno);
+            if(isNaN(busNumber)){
+                busNumber = DEFAULT_I2C_BUS_NUMBER
             }
 
-    
+            var address = parseInt(config.address);
+            if(isNaN(address)){
+                address = DEFAULT_NOTECARD_I2C_ADDRESS;
+            }
+
+            this.generateCloseListener();
+
+            this.notecard.connect();
+        }
+
+        generateCloseListener() {
+            this.on("close", () => {
+                this.notecard.disconnect();
+            });
+        }
+
+        async sendRequest(request) {
             
-        });
-    
+            const response = await this.notecard.request(request);
+                
+            return response; 
+        }
+
+        get busNumber() {
+            return this.notecard.transactor.busNumber;
+        }
+
+        set busNumber(n) {
+            this.notecard.transactor.busNumber = n;
+        }
+
+        get address() {
+            return this.notecard.transactor.address;
+        }
+
+        set address(a) {
+            this.notecard.transactor.address = a;
+        }
+
+        get transactor() {
+            return this.notecard.transactor;
+        }
+
+        set transactor(t) {
+            this.notecard.transactor = t;
+        }
     }
-
     
-    RED.nodes.registerType("notecard-request", NotecardRequestNode);
+    RED.nodes.registerType("notecard-config", NotecardConfigNode);
 }

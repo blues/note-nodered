@@ -1,0 +1,110 @@
+
+
+
+<script type="text/html" data-template-name="notecard-request">
+    <div class="form-row">
+        <label for="node-input-notecard"><i class="fa fa-server"></i> Notecard</label>
+        <input type="text" id="node-input-notecard">
+    </div>
+    <div class="form-row">
+        <label for="node-input-payload"><i class="fa fa-envelope"></i> Payload</span></label>
+        <input type="text" id="node-input-payload" style="width:70%">
+        <input type="hidden" id="node-input-payloadType">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="notecard-request">
+    <p>Send JSON request to Notecard.</p>
+
+    
+    <h3>Inputs</h3>
+        <dl class="message-properties">
+            <dt class="optional">payload 
+                <span class="property-type">JSON</span>
+            </dt>
+            <dd> request to send to Notecard. </dd>
+
+            <dt class="optional">topic <span class="property-type">string</span></dt>
+            <dd> not used by Notecard Request node.</dd>
+        </dl>
+    
+     <h3>Outputs</h3>
+        <dl class="message-properties">
+            <dt class="optional">payload 
+                <span class="property-type">JSON</span>
+            </dt>
+            <dd> response from the Notecard.</dd>
+        </dl>
+
+    <h3>Properties</h3>
+        <dl class="message-properties">
+            <dt class="optional">Payload <span class="property-type"> JSON</span></dt>
+            <dd> request to send to Notecard. This overrides the <code>payload</code> field on the node input.</dd>
+        </dl>
+    
+    <!-- <h3>Details</h3> -->
+        
+    
+    <h3>References</h3>
+        <ul>
+            <li><a href="https://dev.blues.io/reference/complete-api-reference/introduction/">Notecard API Doc</a> - full reference to Notecard API</li>
+            <li><a href="https://dev.blues.io/reference/notecard-walkthrough/json-fundamentals/">Notecard JSON</a> - Notecard and JSON behavior</li>
+        </ul>
+    </script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('notecard-request', {
+        category: 'Notecard',
+        defaults: {
+            notecard: {
+                type:"notecard-config",
+                required:true
+            },
+            name: {value:""},
+            payload: {value:"payload", required:false, validate: RED.validators.typedInput("payloadType")},
+            payloadType: {value:"msg"},
+            outputType: {value:"", required:false},
+        },
+        color:"#E35253",
+        inputs:1,
+        outputs:1,
+        icon: "serial.png",
+        align: "right",
+        label: function() { return this.name||'Notecard Request'; },
+        labelStyle: function() { return this.name?"node_label_italic":"";},
+        oneditprepare: function() {
+            if (this.payloadType == null) {
+                this.payloadType = "msg";
+            } else if (this.payloadType === 'string' ) {
+                this.payloadType = "str";
+            }
+
+            $("#node-input-payload").typedInput({
+                default: 'msg',
+                typeField: $("#node-input-payloadType"),
+                types:['msg','flow','global','json', 'jsonata']
+            });
+            $("#node-input-payload").typedInput('type',this.payloadType);
+            $("#node-input-payloadType").val(this.payloadType);
+            if ($("#node-input-payload").typedInput('type') === 'msg' &&
+                $("#node-input-payload").typedInput('value') === ''
+            ) {
+                $("#node-input-payload").typedInput('value','payload');
+            }
+			
+            $("#node-input-payload").on('change',function() {
+                if ($("#node-input-payload").typedInput('type') === 'msg' &&
+                    $("#node-input-payload").typedInput('value') === ''
+                ) {
+                    $("#node-input-payload").typedInput('value','payload');
+                }
+            });
+            
+        }
+    });
+</script>

@@ -16,7 +16,8 @@
     ],
     "node-red": {
         "nodes": {
-            "notecard-request": "notecard/notecard-node.js"
+            "notecard-config": "notecard/notecard-node.js",
+            "notecard-request": "notecard/generic-request-node.js"
         }
     },
     "scripts": {
