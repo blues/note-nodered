@@ -1,16 +1,24 @@
 
+const queue = require('./promise-queue.js')
 
 class Notecard {
     transactor = null;
+    _queue;
     constructor(transactor = null){
         this.transactor = transactor;
+        this._queue = new queue.PromiseQueue();
+    }
+
+    async connect() {
+        await this.transactor.open();
+    }
+
+    async disconnect() {
+        await this.transactor.close();
     }
 
     async request(req){
-        if(this.transactor.isOpen === false){
-            await this.transactor.open();
-        }
-
+        
         const isString = (typeof req) === 'string';
 
         var reqBuffer;
@@ -21,19 +29,19 @@ class Notecard {
             reqBuffer = Buffer.from(JSON.stringify(req) + "\n");
             
         }
-
-        const resBuffer = await this.transactor.doTransaction(reqBuffer);
+        
+        const generator = () => {return this.transactor.doTransaction(reqBuffer)};
+        var transaction = this._queue.add(generator);
+        var resBuffer = await transaction;
 
         if(isString){
             return(resBuffer.slice(0, -2).toString());
         }
         return(JSON.parse(resBuffer.toString()));
+        
     }
 
     
 }
-
-
-
 
 module.exports = {Notecard};

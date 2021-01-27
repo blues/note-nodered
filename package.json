@@ -1,14 +1,14 @@
 {
     "name": "node-red-contrib-notecard",
-    "version": "0.0.2",
+    "version": "1.0.0",
     "description": "A Node-RED node to talk to the Notecard via Raspberry PI's I2C port",
     "license": "MIT",
     "dependencies": {
         "i2c-bus": "^5.2.0"
     },
-    "repository":{
-         "type":"git",
-         "url": "git+https://github.com/blues/note-nodered.git"
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/blues/note-nodered.git"
     },
     "keywords": [
         "node-red",
@@ -16,7 +16,8 @@
     ],
     "node-red": {
         "nodes": {
-            "notecard-request": "notecard/notecard-node.js"
+            "notecard-config": "notecard/notecard-node.js",
+            "notecard-request": "notecard/notecard-request-node.js"
         }
     },
     "scripts": {
@@ -25,13 +26,13 @@
     "devDependencies": {
         "mocha": "^8.2.1",
         "node-red": "^1.2.7",
-        "node-red-node-test-helper": "^0.2.5"
+        "node-red-node-test-helper": "^0.2.5",
+        "sinon": "^9.2.4"
     },
     "bugs": {
-        "email":"support@blues.com"
+        "email": "support@blues.com"
     },
     "author": {
         "name": "Greg Wolff, Blues Wireless"
     }
 }
-

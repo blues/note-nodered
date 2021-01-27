@@ -13,6 +13,20 @@ describe('i2ctransactor', () =>  {
            assert.strictEqual(t.busNumber, 1);
         });
 
+        it('should have correct address when passed in as config', () => {
+            const c = {address: 0x19};
+            const t = new transactor.I2CTransactor(c);
+
+            assert.strictEqual(t.address, c.address, "Address does not match provided configuration");
+        });
+
+        it('should have correct busNumber port when passed in as config', () => {
+            const c = {busNumber: 5};
+            const t = new transactor.I2CTransactor(c);
+
+            assert.strictEqual(t.busNumber, c.busNumber, "Bus number does not match provided configuration");
+        });
+
 
     });
 
@@ -72,9 +86,11 @@ describe('i2ctransactor', () =>  {
 
     
     describe('doTransaction', () => {
-        const i2c = new transactor.I2CTransactor();
+        
         
         it('should respond to version request', async () => {
+            const i2c = new transactor.I2CTransactor();
+
             await i2c.open();
             await i2c.reset();
 
@@ -84,6 +100,18 @@ describe('i2ctransactor', () =>  {
 
             await i2c.close();
             assert.ok(response.toString().includes('"name":"Blues Wireless Notecard"'));
+        });
+
+        it('should throw error if i2c channel is not open', async () => {
+            const i2c = new transactor.I2CTransactor();
+            try {
+                const r = await i2c.doTransaction('random-input');
+
+            }catch (err){
+                assert.strictEqual(err, 'Transactor channel not open. Cannot communicate with Notecard');
+                return
+            }
+            assert.fail('Expected error, but did not receive one');
         });
             
     });

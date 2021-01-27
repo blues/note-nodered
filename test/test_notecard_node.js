@@ -16,6 +16,7 @@ class BusMockTransactor extends transactor.InMemTransactor{
         super(readWriter);
         this.address = null;
         this.busNumber = null;
+        this.isOpen = true;
     }
 }
 
@@ -24,7 +25,7 @@ helper.init(require.resolve('node-red'));
 
 
 
-describe('Notecard Node', function() {
+describe('Notecard Config Node', function() {
 
     before(function(done) {
         helper.startServer(done);
@@ -37,15 +38,16 @@ describe('Notecard Node', function() {
     afterEach(function() {
         helper.unload();
     });
-    const flow = [{ id: "n1", type: "notecard-request", name: "Notecard Request" }];
+    const flow = [{ id: "n1", type: "notecard-config", name: "Notecard Config" }];
 
     it('should be loaded with correct default values', function(done) {
         
         helper.load(ncNode, flow, () => {
             const n1 = helper.getNode("n1");
             try{
-                n1.should.have.property('name', 'Notecard Request');
-                n1.should.have.property('busno', 1);
+                n1.should.have.property('name', 'Notecard Config');
+                n1.should.have.property('busNumber', 1);
+                n1.should.have.property('address', 0x17);
                 done();
             }catch(err){
                 done(err)
@@ -55,201 +57,75 @@ describe('Notecard Node', function() {
         
     });
 
-    it('should use msg.address field value if node address field is not populated', (done) => {
+    const loadFlow = (node, flow) => {
+        const p = new Promise((resolve, reject) => {
+            try {
+                    helper.load(node, flow, () => {
+                    resolve()
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
+
+        return p;
+    }
+
+    it('should apply node bus number field value to transactor if populated', async () => {
         var transactor = new BusMockTransactor();
-        helper.load(ncNode, flow, () => {
-            const n1 = helper.getNode("n1");
-            n1.notecard.transactor = transactor;
-            
-            n1.on('input', () => {
-                try{
-                    should.equal(transactor.address, 0x19);
-                    done();
-                } catch (err) {
-                    done(err);
-                }
-            });
-            n1.receive({address:0x19}); 
-            
-        });
+        await loadFlow(ncNode, flow);
+        const n1 = helper.getNode("n1");
+        n1.notecard.transactor = transactor;
+        n1.notecard.connect();
+
+        n1.busNumber = 7;
+
+        should.equal(n1.notecard.transactor.busNumber, 7);
+        
     });
 
-    it('should override msg.address field value with node address field value', (done) => {
+    it('should apply node address field value to transactor if populated', async () => {
         var transactor = new BusMockTransactor();
-        helper.load(ncNode, flow, () => {
-            const n1 = helper.getNode("n1");
-            n1.notecard.transactor = transactor;
+        await loadFlow(ncNode, flow);
+        const n1 = helper.getNode("n1");
+        n1.notecard.transactor = transactor;
+        n1.notecard.connect();
 
-            n1.address = 0x27;
-            n1.on('input', () => {
-                try{
-                    should.equal(n1.notecard.transactor.address, 0x27);
-                    done();
-                } catch (err) {
-                    done(err);
-                }
-            });
-            n1.receive({address:0x19});
-        })
+        n1.address = 0x27;
 
-    });
+        //await n1.sendRequest({empty:"request"});
 
-    const flowWithHelper = [{ id: "n1", type: "notecard-request", name: "Notecard Request",outputType:"", wires:[["n2"]] },
-                            { id: "n2", type:"helper"}];
-    describe('node output type set to JSON', () => {
-        var expectedResponse = {field1: "value1"};
-        var rw = new transactor.BufferReadWriter(255, 255);
-        rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + NotecardMessageTerminator);
-
-        var t = new BusMockTransactor(rw);
-        var outputType = 'json';
-        var startFlowWithMessage  = (msg, done) => {
-            helper.load(ncNode, flowWithHelper, () => {
-                const n1 = helper.getNode("n1");
-                const n2 = helper.getNode("n2");
-                n1.outputType = outputType;
-                n1.notecard.transactor = t;
-                
-                n2.on('input', (msg) => {
-                    try{
-                        assert.deepEqual(msg.payload, expectedResponse);
-                        done()
-                    } catch (err){
-                        done(err);
-                    }
-                });
-
-                n1.receive({payload:msg});
-            });
-        };
-       
-        it('should output JSON object if input is JSON', (done) => {
-            rw.readBufferIndex = 0;
-            startFlowWithMessage({inputfield:"inputValue"}, done);
-        });
-
-        it('should output JSON object if input is string', (done) => {
-            rw.readBufferIndex = 0;
-            startFlowWithMessage('{"inputfield":"inputValue"}', done);
-        });
-
-    });
-
-    describe('node output type set to string', () => {
-        var expectedResponse = '{"field1":"value1"}';
-        var rw = new transactor.BufferReadWriter(255, 255);
-        rw.readBuffer = Buffer.from(expectedResponse + NotecardMessageTerminator);
-
-        var t = new BusMockTransactor(rw);
-        var outputType = 'string';
-        var startFlowWithMessage  = (msg, done) => {
-            helper.load(ncNode, flowWithHelper, () => {
-                const n1 = helper.getNode("n1");
-                const n2 = helper.getNode("n2");
-                n1.outputType = outputType;
-                n1.notecard.transactor = t;
-                
-                n2.on('input', (msg) => {
-                    try{
-                        assert.strictEqual(msg.payload, expectedResponse);
-                        done()
-                    } catch (err){
-                        done(err);
-                    }
-                });
-
-                n1.receive({payload:msg});
-            });
-        };
-       
-        it('should output string object if input is JSON', (done) => {
-            rw.readBufferIndex = 0;
-            startFlowWithMessage({inputfield:"inputValue"}, done);
-        });
-
-        it('should output string object if input is string', (done) => {
-            rw.readBufferIndex = 0;
-            startFlowWithMessage('{"inputfield":"inputValue"}', done);
-        });
-
-    });
-
-    describe('node output type set to ""', () => {
+        should.equal(n1.notecard.transactor.address, 0x27);
         
-        var rw = new transactor.BufferReadWriter(255, 255);
-        
+    });
 
-        var t = new BusMockTransactor(rw);
-        var outputType = '';
-        var startFlowWithMessageAndCheckResult  = (msg, expectedResponse, done) => {
-            helper.load(ncNode, flowWithHelper, () => {
-                const n1 = helper.getNode("n1");
-                const n2 = helper.getNode("n2");
-                n1.outputType = outputType;
-                n1.notecard.transactor = t;
-                
-                n2.on('input', (msg) => {
-                    try{
-                        assert.deepEqual(msg.payload, expectedResponse);
-                        done()
-                    } catch (err){
-                        done(err);
-                    }
-                });
+    describe('sendRequest', () => {
+        context('input is JSON""', () => {
 
-                n1.receive({payload:msg});
-            });
-        };
-       
-        it('should output string object if input is JSON', (done) => {
-            rw.readBufferIndex = 0;
-            var expectedResponse = {field1: "value1"};
+            const expectedResponse = {field1: "value1"};
+            const rw = new transactor.BufferReadWriter(255, 255);
             rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + NotecardMessageTerminator);
-            startFlowWithMessageAndCheckResult({inputfield:"inputValue"}, expectedResponse, done);
-        });
 
-        it('should output string object if input is string', (done) => {
-            rw.readBufferIndex = 0;
-            var expectedResponse = '{"field1":"value1"}';
-            rw.readBuffer = Buffer.from(expectedResponse + NotecardMessageTerminator);
-            startFlowWithMessageAndCheckResult('{"inputfield":"inputValue"}', expectedResponse, done);
-        });
+            const mockTransactor = new BusMockTransactor(rw);
 
-    });
-
-    describe('payload set to JSON object', () => {
-        
-        it('should override msg.payload field value with node Payload field value if is populated', (done) => {
-            var rw = new transactor.BufferReadWriter(0, 255);
-            rw.readBuffer = Buffer.from("{}" + NotecardMessageTerminator);
-            var getWriteBufferString = () => rw.writeBuffer.slice(0, rw.writeBufferIndex).toString().trim();
-
-            var t = new BusMockTransactor(rw);
-            helper.load(ncNode, flowWithHelper, () => {
+            const sendRequestCheckResponse = async (request, expectedResponse) => {
+                await loadFlow(ncNode, flow);
                 const n1 = helper.getNode("n1");
-                const n2 = helper.getNode("n2");
-                n1.notecard.transactor = t;
-                n1.payload = {nodePayload:"nodeValue"};
-                n1.payloadType = null
-                n2.on('input', () => {
-                    try{
-                        
-                        var actualRequest = getWriteBufferString();
-                        should.equal(actualRequest, JSON.stringify(n1.payload));
-                        done();
-                    } catch (err) {
-                        done(err);
-                    }
-                });
-                var p = {msgPayload:"msgValue"};
-                n1.receive({payload:p});
-            })
-    
+                n1.notecard.transactor = mockTransactor;
+                n1.notecard.connect();
+
+                const response = await n1.sendRequest(request);
+                assert.deepEqual(response, expectedResponse);
+            }
+
+            it('should return expected response as JSON', async () => {
+                rw.readBufferIndex = 0;
+                await sendRequestCheckResponse({payload:{my:"request"}}, expectedResponse);
+            });
+
         });
 
     });
-
-    
-    
+   
     
 });

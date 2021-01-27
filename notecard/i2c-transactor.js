@@ -10,8 +10,18 @@ class I2CTransactor {
 
     address = 0x17;
     busNumber = 1;
-    constructor(){
-        //console.log('constructed transactor');
+    constructor(config){
+        if(typeof config !== 'object'){
+            return;
+        }
+
+        if('address' in config){
+            this.address = config.address;
+        }
+
+        if('busNumber' in config){
+            this.busNumber = config.busNumber;
+        }
     }
 
     bus = null;
@@ -71,6 +81,9 @@ class I2CTransactor {
     }
 
     async doTransaction(messageBuffer){
+        if(!this.isOpen){
+            throw 'Transactor channel not open. Cannot communicate with Notecard';
+        }
         
         var response = Buffer.alloc(0);
         
