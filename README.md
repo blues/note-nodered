@@ -1,4 +1,4 @@
-# note-nodered
+﻿# note-nodered
 
 Node JS library with Custom Node Red package for communication with Blues Wireless Notecard over I²C.
 
@@ -16,26 +16,43 @@ https://github.com/blues/note-nodered
 
 ## Usage
 
-Add a `Notecard Request` node to a Node Red flow from the node pallet on the left-hand side of the interface
+Add a `Notecard Request` node to a Node Red flow from the node pallet on the left-hand side of the interface.
+
+Populate input message `payload` field with a JSON object conforming to a [Notecard request](https://dev.blues.io/reference/complete-api-reference/introduction/).
+
+The Notecard response will appear in the `payload` field of the output as a JSON object.
 
 ### Configuration
-The default node configuration supports the default Raspberry Pi and Notecard configurations.  
+The `Notecard Request` node must select a `Notecard` configuration node.
 
+If there is no configuration node available, select `Add new notecard-config`, and click the edit button.
+
+![Notecard Config Node](images/notecard-config-screenshot.png)
+
+#### Configuration Node Settings
+The default Notecard Configuration node settings support the default Raspberry Pi and Notecard configurations.
 In most cases, additional configuration is not required.
 
-_Communication Settings_
+__Bus Number__
 To communicate with the Notecard, the I2C bus number must be set to the port number being used by the I2C module on the Raspberry Pi.  It is a value between [0, 7] inclusive.
 
+__Address__
 The default address for the Notecard is 0x17 (23).  If that has been changed, then set the address value to the new Notecard address.
 ![Communication Settings](images/notecard_request_comms_properties.png)
 
+
 ### Sending Notecard Requests
-The `Notecard Request` node accepts Notecard requests formed as JSON object, or as a JSON string.
+The `Notecard Request` node accepts Notecard requests formed as JSON object.
 
 Set the value of the input  `msg.payload` to a Notecard request.
+
+Here is an example using an `Inject` node:
+
 ![Message Payload](images/notecard_request_payload.png)
 
-The response will be provided on the `Notecard Request` output in the `msg.payload` field.
+__Response__
+
+The `Notecard Request` will output the response from the Notecard in the `msg.payload` field as a JSON object.
 
 ```json
 {
@@ -61,16 +78,26 @@ The response will be provided on the `Notecard Request` output in the `msg.paylo
 }
 ```
 
-By default, the `Notecard Request` node will return responses as the same type as the input request (JSON ---> JSON and string ---> string)
-
-
-
-
-
 ## Examples
-The [examples](notecard/examples/) directory contains example Node Red flows:
+The [examples](examples/) directory contains example Node Red flows:
 
-- [Get Notecard Version](notecard/examples/notecard-version-request.json)
+- [Get Notecard Version](examples/notecard-version-request.json)
+
+
+#### Simple Flow Example Layout
+![Simple Notecard Request Flow](images/example-layout-screenshot.png)
+
+## Compatibility
+Version 1.x.x is not backwards compatible with version 0.x.x.  There is no expectation of support for importing flows developed with previous versions of this package.
+
+Version 1.x.x does *not* support JSON strings as request inputs or response outputs.  All requests and responses are formated as a JSON object.
+
+### Migration
+`Notecard Request` nodes are a drop in replacement in the diagram if using JSON objects for input and output.  
+
+Be sure to set the Notecard Config node in each case.  
+
+Any JSON string inputs need to be parsed to JSON objects prior to input into this node.
 
 ## Contributing
 
