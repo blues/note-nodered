@@ -6,13 +6,21 @@ This Node Red package enables you to control a Notecard by developing flows in N
 
 ## Installation
 
+### Add Notecard Package
 With Node Red pallet manager search for `node-red-contrib-notecard`
 
 For manual installation, follow the steps suggested by the following video:
   https://youtu.be/2bmWBU2xnHc
 
 You can access the source in the repo here:
-https://github.com/blues/note-nodered 
+  https://github.com/blues/note-nodered 
+
+### Enable I2C on Raspberry Pi
+The I2C interface on the Raspberry Pi must be enabled.
+
+Assuming you are using a Raspbian-based operating system distribution on the Raspberry Pi, follow steps 1-7 here
+https://dev.blues.io/build/tutorials/sensor-tutorial/notecarrier-pi/raspberry-pi/python/#configure-the
+
 
 ## Usage
 
