@@ -3,7 +3,8 @@ var assert = require('assert');
 
 const protocol = require('../notecard/bus-serial-protocol.js');
 
-//function createReadWriter(config={readBufferLength:1024,writeBufferLength:1024}){
+const sinon = require('sinon');
+
 function createReadWriter(){
     var rw = {
         readBuffer: Buffer.from(""), //Buffer.alloc(config.readBufferLength),
@@ -252,6 +253,22 @@ describe('bus-serial-protocol', () =>  {
             assert.strictEqual(rw.writeBuffer.slice(1,payload.length + 1).toString(), '{"req":"card.version"}\n', 'Payload value not in write buffer');
 
         })
+
+        it('should call delay function if it is provided on function interface', async () => {
+            rw.reset();
+            var payload = Buffer.from('{"req":"card.version"}\n');
+            var payloadSize = payload.length/2 + 1;
+
+            const spy = sinon.spy();
+            const delayFn = async () => {
+                spy();
+            }
+
+            await protocol.sendRequest(rw, payload, payloadSize,{isCancelled:false}, delayFn);
+            assert.ok(spy.calledOnce);
+
+
+        });
 
     });
 
