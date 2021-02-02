@@ -27,7 +27,7 @@ async function queryAvailableBytes(rw){
 
 
 
-async function sendRequest(rw, request, payloadSize, token={isCancelled:false}){
+async function sendRequest(rw, request, payloadSize, token={isCancelled:false}, delayFn = async()=>{}){
     const REQUEST_FRAME_HEADER_SIZE = 1;
     const chunkSize = payloadSize + REQUEST_FRAME_HEADER_SIZE;
     const buffer = Buffer.alloc(chunkSize);
@@ -36,13 +36,10 @@ async function sendRequest(rw, request, payloadSize, token={isCancelled:false}){
 
     
     var bytesToSend = requestSlice.length;
-    while(bytesToSend > 0 && token.isCancelled === false){
-        //payloadsize = (payloadsize > maxPayloadSize) ? maxPayloadSize : payloadsize;
+    while(token.isCancelled === false){
+        
         bytesToSend = (bytesToSend > payloadSize) ? payloadSize : bytesToSend;
         requestSlice.copy(buffer, REQUEST_FRAME_HEADER_SIZE, 0, bytesToSend);
-        
-        
-        //numBytesToWrite = (numBytesToWrite > chunksize) ? chunksize : numBytesToWrite;
 
         buffer[0] = bytesToSend;
         var numBytesToWrite = bytesToSend + REQUEST_FRAME_HEADER_SIZE;
@@ -50,7 +47,12 @@ async function sendRequest(rw, request, payloadSize, token={isCancelled:false}){
         
         requestSlice = requestSlice.slice(numBytesWritten - REQUEST_FRAME_HEADER_SIZE);
         bytesToSend = requestSlice.length;
+        if(bytesToSend <= 0){
+            return;
+        }
+        await delayFn();
     }
+    return;
 
 }
 
@@ -72,7 +74,6 @@ async function readResponse(rw, numBytesAvailable, payloadSize, token={isCancell
 
         var numBytesRead = await rw.read(numBytesToRead, readResponse);
         numBytesAvailable = readResponse[0];
-        //numBytesSent = readResponse[1];
 
         response = Buffer.concat([response, readResponse.slice(RESPONSE_FRAME_HEADER_SIZE, numBytesRead)])
     }

@@ -86,8 +86,8 @@ class I2CTransactor {
         }
         
         var response = Buffer.alloc(0);
-        
-        await protocol.sendRequest(this, messageBuffer, I2CTransactor.MAX_PAYLOAD_CHUNK_BYTES);
+        const delayFn = () => timeout(2);
+        await protocol.sendRequest(this, messageBuffer, I2CTransactor.MAX_PAYLOAD_CHUNK_BYTES, {isCancelled:false}, delayFn);
 
         var numBytes = await this.pollForAvailableBytes();
 
@@ -134,8 +134,4 @@ module.exports = {I2CTransactor};
 
 
 const timeout = require('util').promisify(setTimeout)
-
-// function timeout(intervalMs){
-//     return new PromiseRejectionEvent((resolve,reject) => setTimeout(resolve, intervalMs));
-// }
 

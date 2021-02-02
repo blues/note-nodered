@@ -1,5 +1,6 @@
 
 var assert = require('assert');
+const should = require('should');
 
 const transactor = require('../notecard/i2c-transactor.js');
 
@@ -113,6 +114,28 @@ describe('i2ctransactor', () =>  {
             }
             assert.fail('Expected error, but did not receive one');
         });
+
+        context('adding large note to Notecard', () => {
+            const i2c = new transactor.I2CTransactor();
+            const cleanUpNotes = Buffer.from(`{"req":"file.delete","files":["data.qo"]}\n`);
+
+            it('should return that one note has been added', async () => {
+                await i2c.open();
+                await i2c.doTransaction(Buffer.from('\n'));
+                await i2c.reset();
+                var r = await i2c.doTransaction(cleanUpNotes);
+                
+
+                await delayMs(10);
+
+                const req = Buffer.from(JSON.stringify(largeNoteAddRequestJSON) + '\n');
+
+                r = await i2c.doTransaction(req);
+                const rStr = r.toString();
+
+                rStr.should.startWith('{"err":"error adding note:');
+            });
+        });
             
     });
 
@@ -153,4 +176,39 @@ describe('i2ctransactor', () =>  {
 });
 
 
+function delayMs(delay) {
+    return new Promise(function(resolve) {
+        setTimeout(resolve, delay);
+    });
+}
 
+
+
+const largeNoteAddRequestJSON = {
+    req: "note.add",
+    body: {
+        glossary: {
+            title: "example glossary",
+            GlossDiv: {
+                title: "S",
+                GlossList: {
+                    GlossEntry: {
+                        ID: "SGML",
+                        SortAs: "SGML",
+                        GlossTerm: "Standard Generalized Markup Language",
+                        Acronym: "SGML",
+                        Abbrev: "ISO 8879:1986",
+                        GlossDef: {
+                            para: "A meta-markup language, used to create markup languages such as DocBook.",
+                            GlossSeeAlso: [
+                                "GML",
+                                "XML"
+                            ]
+                        },
+                        "GlossSee": "markup"
+                    }
+                }
+            }
+        }
+    }
+}
