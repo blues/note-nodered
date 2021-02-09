@@ -121,7 +121,7 @@ npm test
 
 For additional Notecard SDKs and Libraries, see:
 
-* [note-python](https://blues.github.io/opensource/code-of-conduct) for Python support
+* [note-python](https://github.com/blues/note-python) for Python support
 * [note-c](https://github.com/blues/note-c) for Standard C support
 * [note-go](https://github.com/blues/note-go) for Go
 * [note-arduino](https://github.com/blues/note-arduino) for Arduino 
