@@ -3,7 +3,7 @@
     "version": "1.0.1",
     "description": "A Node-RED node to talk to the Notecard via Raspberry PI's I2C port",
     "license": "MIT",
-    "dependencies": {
+    "optionalDependencies": {
         "i2c-bus": "^5.2.0"
     },
     "repository": {

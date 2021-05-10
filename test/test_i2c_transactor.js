@@ -1,11 +1,18 @@
 
+const isWin = process.platform === "win32";
+if(isWin)
+{
+    return
+}
+
+
 var assert = require('assert');
 const should = require('should');
-
 const transactor = require('../notecard/i2c-transactor.js');
 
-
 describe('i2ctransactor', () =>  {
+    
+    
     describe('constructor', () =>  {
         
         it('should have correct default values', function (){

@@ -1,5 +1,11 @@
-const I2C = require("i2c-bus");
+try{
+    var I2C = require("i2c-bus");
+}
+catch{
+    I2C = null
+}
 const protocol = require('./bus-serial-protocol.js');
+
 
 
 class I2CTransactor {
@@ -31,6 +37,9 @@ class I2CTransactor {
     }
 
     async open(){
+        if(I2C === null){
+            return;
+        }
         this.bus = await I2C.openPromisified(this.busNumber);
     }
 

@@ -115,7 +115,7 @@ describe('Notecard Config Node', function() {
                 n1.notecard.connect();
 
                 const response = await n1.sendRequest(request);
-                assert.deepEqual(response, expectedResponse);
+                assert.deepStrictEqual(response, expectedResponse);
             }
 
             it('should return expected response as JSON', async () => {
