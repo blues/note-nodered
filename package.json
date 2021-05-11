@@ -35,5 +35,8 @@
     },
     "author": {
         "name": "Greg Wolff, Blues Wireless"
+    },
+    "dependencies": {
+        "serialport": "^9.0.7"
     }
 }
