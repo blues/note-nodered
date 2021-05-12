@@ -113,8 +113,10 @@ class InMemTransactor {
 
 class MockSocket {
     IsOpen = false;
-    ReceivedData = null;
-    _responseData = null;
+    ReceivedData = [];
+    _responseData = [];
+    ResponseCount = 0;
+    ReceiveCount = 0;
     constructor(isOpen = true){
         this.IsOpen = isOpen;
     }
@@ -133,8 +135,8 @@ class MockSocket {
         });
     }
 
-    SetResponse(data){
-        this._responseData = data;
+    AddResponse(data){
+        this._responseData.push(data);
     }
 
     SendReceive(data){
@@ -142,8 +144,15 @@ class MockSocket {
             if(!this.IsOpen)
                 reject(new Error('Socket not open'));
 
-            this.ReceivedData = data;
-            resolve(this._responseData);
+            this.ReceivedData.push(data);
+            this.ReceiveCount++;
+
+            if(this.ResponseCount >= this._responseData.length)
+                reject(new Error('No response data available'));
+
+            const response = this._responseData[this.ResponseCount];
+            this.ResponseCount++;
+            resolve(response);
         });
     }
 
@@ -152,11 +161,83 @@ class MockSocket {
             if(!this.IsOpen)
                 reject(new Error('Socket not open'));
 
-            this.ReceivedData = data;
+            this.ReceivedData.push(data);
+            this.ReceiveCount++;
+            
+
             resolve();
         });
     }
 
+}
+
+class MockSocketWithReceiveDelay extends MockSocket {
+    _delay = [];
+    constructor(isOpen = true){
+        super(isOpen);
+    }
+
+    AddDelay(d){
+        this._delay.push(d);
+    }
+
+    SendReceive(data){
+        return new Promise((resolve, reject) => {
+            if(!this.IsOpen)
+                reject(new Error('Socket not open'));
+
+
+            if(this.ReceiveCount >= this._delay.length)
+                reject(new Error('No delay duration available'));
+
+            setTimeout(() => {
+
+                if(this.ResponseCount >= this._responseData.length)
+                    reject(new Error('No response data available'));
+
+                
+                const response = this._responseData[this.ResponseCount];
+                this.ResponseCount++;
+                resolve(response);
+            }, this._delay[this.ReceiveCount]);
+            
+            this.ReceivedData.push(data);
+            this.ReceiveCount++;
+
+
+        });
+    }
+}
+
+class MockSocketWithSendDelay extends MockSocket {
+    _delay = [];
+    constructor(isOpen = true){
+        super(isOpen);
+    }
+
+    AddDelay(d){
+        this._delay.push(d);
+    }
+
+    Send(data){
+        return new Promise((resolve, reject) => {
+            if(!this.IsOpen)
+                reject(new Error('Socket not open'));
+
+
+            if(this.ReceiveCount >= this._delay.length)
+                reject(new Error('No delay duration available'));
+
+            setTimeout(() => {
+                this.ReceivedData.push(data);
+                resolve();
+            }, this._delay[this.ReceiveCount]);
+            
+            this.ReceiveCount++;
+
+
+        });
+    }
 }
 
 describe('MockSocket', () => {
@@ -195,39 +276,100 @@ describe('MockSocket', () => {
         })
     });
 
-    describe('SetResponse', () => {
-        it('should set the response property to whatever the input value is', () => {
+    describe('AddResponse', () => {
+        it('should append input argument to response array', () => {
             const m = new MockSocket()
-            const r = `abcdef`;
-            m.SetResponse(r);
-            m._responseData.should.equal(r);
+            const r1 = `abcdef`;
+            m.AddResponse(r1);
+            m._responseData[0].should.equal(r1);
+
+            const r2 = `qrstuv`;
+            m.AddResponse(r2);
+            m._responseData[1].should.equal(r2);
         });
     });
 
     describe('Send', () => {
-        const m = new MockSocket();
-        it('should set the ReceivedData property to whatever was sent', async () => {
-            const d = 'abcdefg';
-            await m.Send(d);
-            m.ReceivedData.should.equal(d);
+        
+        it('should append the ReceivedData property to whatever was sent', async () => {
+            const m = new MockSocket();
+            const d1 = 'abcdefg';
+            await m.Send(d1);
+            m.ReceivedData[0].should.equal(d1);
+
+            const d2 = 'qrslkjsf';
+            await m.Send(d2);
+            m.ReceivedData[1].should.equal(d2);
+
+        });
+
+        it('should increment the ReceiveCount property', async () => {
+            const m = new MockSocket();
+            m.ReceiveCount.should.equal(0);
+
+            await m.Send('random data');
+            await m.Send('random data');
+            m.ReceiveCount.should.equal(2);
+            m.ResponseCount.should.equal(0);
 
         });
     });
 
     describe('SendReceive', () => {
-        const m = new MockSocket();
-        it('should set the ReceivedData property to what ever was sent', async () => {
-            const d = 'abcdefgh';
-            await m.SendReceive(d);
-            m.ReceivedData.should.equal(d);
+        it('should append the ReceivedData property to whatever was sent', async () => {
+            const m = new MockSocket();
+            m.AddResponse(1);
+            m.AddResponse(2);
+            const d1 = 'abcdefg';
+            await m.SendReceive(d1);
+            m.ReceivedData[0].should.equal(d1);
+
+            const d2 = 'qrslkjsf';
+            await m.SendReceive(d2);
+            m.ReceivedData[1].should.equal(d2);
         });
 
-        it('should return what ever was provided by SetResponse method', async () => {
-            const r = 'my-response';
-            m.SetResponse(r);
+        it('should increment the ReceiveCount property', async () => {
+            const m = new MockSocket();
+            m.ReceiveCount.should.equal(0);
+            m.AddResponse(1);
+            m.AddResponse(2);
 
-            const response = await m.SendReceive('some data');
-            response.should.equal(r);
+            await m.SendReceive('random data');
+            await m.SendReceive('random data');
+            m.ReceiveCount.should.equal(2);
+        })
+
+        it('should increment the ResponseCount property', async () => {
+            const m = new MockSocket();
+            m.ReceiveCount.should.equal(0);
+            m.AddResponse(1);
+            m.AddResponse(2);
+
+            await m.SendReceive('random data');
+            await m.SendReceive('random data');
+            m.ResponseCount.should.equal(2);
+        })
+
+        it('should return data added by AddResponse method', async () => {
+            const m = new MockSocket();
+            const r1 = 'my-first-response';
+            const r2 = 'my-second-response';
+            m.AddResponse(r1);
+            m.AddResponse(r2);
+
+            let response = await m.SendReceive('some data');
+            response.should.equal(r1);
+
+            response = await m.SendReceive('some data');
+            response.should.equal(r2);
+        });
+
+        it('should throw an error if no responses left to send as a reply', () => {
+            const m = new MockSocket();
+            
+            return (m.SendReceive(`\n`)).should.be.rejectedWith({ message: 'No response data available' });
+            
         });
     });
 });
@@ -338,6 +480,131 @@ describe('notecard', () =>  {
             
             assert.strictEqual(response2, expectedResponse2);
             
+
+        });
+    });
+
+    describe('SendRequest', () => {
+        context('single transaction', () => {
+            it('should return the expected response as a JSON object', async () => {
+                const nc = new notecard.Notecard();
+                nc.Socket = new MockSocket();
+                nc.Socket.AddResponse(`{"Iam":"here"}\n`)
+
+                const request = {hello:"world"};
+                const response = await nc.SendRequest(request);
+
+                response.should.be.deepEqual({Iam:"here"});
+
+            });
+
+            it('should send the request over the Notecard socket as a string', async () => {
+                const nc = new notecard.Notecard();
+                nc.Socket = new MockSocket();
+                nc.Socket.AddResponse(`{"Iam":"here"}\n`)
+
+                const request = {hello:"world"};
+                await nc.SendRequest(request);
+
+                nc.Socket.ReceivedData[0].should.equal(`{"hello":"world"}\n`)
+            })
+        });
+
+        context('multiple transactions', () => {
+            it('should return responses to correct requests in correct order', async () => {
+                const nc = new notecard.Notecard();
+                nc.Socket = new MockSocketWithReceiveDelay();
+                nc.Socket.AddResponse(`{"response1":1}\n`);
+                nc.Socket.AddResponse(`{"response2":2}\n`);
+                nc.Socket.AddDelay(20);
+                nc.Socket.AddDelay(3);
+
+                const r1 = nc.SendRequest({"request1":1});
+                const r2 = nc.SendRequest({"request2":2});
+
+                const response2 = await r2;
+                const response1 = await r1;
+
+                response1.should.deepEqual({"response1":1});
+                response2.should.deepEqual({"response2":2});
+
+            });
+        });
+    });
+
+    describe('SendCommand', () => {
+        context('single transaction', () => {
+
+            it('should send the request over the Notecard socket as a string', async () => {
+                const nc = new notecard.Notecard();
+                nc.Socket = new MockSocket();
+
+                const request = {hello:"world"};
+                await nc.SendCommand(request);
+
+                nc.Socket.ReceivedData[0].should.equal(`{"hello":"world"}\n`)
+            })
+        });
+
+        context('multiple transactions', () => {
+            it('should return responses to correct requests in correct order', async () => {
+                const nc = new notecard.Notecard();
+                nc.Socket = new MockSocketWithSendDelay();
+                nc.Socket.AddDelay(20);
+                nc.Socket.AddDelay(3);
+
+                const r1 = nc.SendCommand({"command1":1});
+                const r2 = nc.SendCommand({"command2":2});
+
+                await r2;
+                await r1;
+
+                nc.Socket.ReceivedData[0].should.equal(`{"command1":1}\n`);
+                nc.Socket.ReceivedData[1].should.equal(`{"command2":2}\n`);
+                
+
+            });
+        });
+    });
+
+    describe('Connect', () => {
+        it('should open the socket to the Notecard', async () => {
+            const nc = new notecard.Notecard();
+            nc.Socket = new MockSocket(false);
+            nc.Socket.IsOpen.should.be.false();
+
+            await nc.Connect();
+
+            nc.Socket.IsOpen.should.be.true();
+
+        });
+
+        it('should throw expection if socket property is not populated', async () => {
+            const nc = new notecard.Notecard();
+            (nc.Socket === null).should.be.true();
+
+            return (nc.Connect()).should.be.rejectedWith({ message: 'Socket not defined' });
+
+        });
+    });
+
+    describe('Disconnect', () => {
+        it('should close the socket to the Notecard', async () => {
+            const nc = new notecard.Notecard();
+            nc.Socket = new MockSocket(true);
+            nc.Socket.IsOpen.should.be.true();
+
+            await nc.Disconnect();
+
+            nc.Socket.IsOpen.should.be.false();
+
+        });
+
+        it('should throw expection if socket property is not populated', async () => {
+            const nc = new notecard.Notecard();
+            (nc.Socket === null).should.be.true();
+
+            return (nc.Disconnect()).should.be.rejectedWith({ message: 'Socket not defined' });
 
         });
     });
