@@ -111,7 +111,126 @@ class InMemTransactor {
     }
 }
 
+class MockSocket {
+    IsOpen = false;
+    ReceivedData = null;
+    _responseData = null;
+    constructor(isOpen = true){
+        this.IsOpen = isOpen;
+    }
 
+    Open(){
+        return new Promise(resolve =>{
+            this.IsOpen = true;
+            resolve();
+        });
+    }
+
+    Close(){
+        return new Promise(resolve => {
+            this.IsOpen = false;
+            resolve();
+        });
+    }
+
+    SetResponse(data){
+        this._responseData = data;
+    }
+
+    SendReceive(data){
+        return new Promise((resolve, reject) => {
+            if(!this.IsOpen)
+                reject(new Error('Socket not open'));
+
+            this.ReceivedData = data;
+            resolve(this._responseData);
+        });
+    }
+
+    Send(data){
+        return new Promise((resolve, reject) => {
+            if(!this.IsOpen)
+                reject(new Error('Socket not open'));
+
+            this.ReceivedData = data;
+            resolve();
+        });
+    }
+
+}
+
+describe('MockSocket', () => {
+    describe('Open', () => {
+        it('should result in IsOpen returning true', async () => {
+            const m = new MockSocket(false);
+            m.IsOpen.should.be.false();
+
+            await m.Open();
+
+            m.IsOpen.should.be.true();
+        });
+
+        it('should still result IsOpen returning true if socket already open', async () => {
+            const m = new MockSocket(true);
+            m.IsOpen.should.be.true();
+
+            await m.Open();
+
+            m.IsOpen.should.be.true();
+        });
+    });
+
+    describe('Close', () => {
+        it('should result in IsOpen returning false, even if socket is already closed', async () => {
+            const m = new MockSocket(true);
+            m.IsOpen.should.be.true();
+
+            await m.Close();
+
+            m.IsOpen.should.be.false();
+
+            await m.Close();
+
+            m.IsOpen.should.be.false();
+        })
+    });
+
+    describe('SetResponse', () => {
+        it('should set the response property to whatever the input value is', () => {
+            const m = new MockSocket()
+            const r = `abcdef`;
+            m.SetResponse(r);
+            m._responseData.should.equal(r);
+        });
+    });
+
+    describe('Send', () => {
+        const m = new MockSocket();
+        it('should set the ReceivedData property to whatever was sent', async () => {
+            const d = 'abcdefg';
+            await m.Send(d);
+            m.ReceivedData.should.equal(d);
+
+        });
+    });
+
+    describe('SendReceive', () => {
+        const m = new MockSocket();
+        it('should set the ReceivedData property to what ever was sent', async () => {
+            const d = 'abcdefgh';
+            await m.SendReceive(d);
+            m.ReceivedData.should.equal(d);
+        });
+
+        it('should return what ever was provided by SetResponse method', async () => {
+            const r = 'my-response';
+            m.SetResponse(r);
+
+            const response = await m.SendReceive('some data');
+            response.should.equal(r);
+        });
+    });
+});
 
 
 var assert = require('assert');
