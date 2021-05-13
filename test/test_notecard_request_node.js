@@ -5,44 +5,13 @@ const should = require("should");
 const helper = require("node-red-node-test-helper");
 const ncConfig = require('../notecard/notecard-node.js');
 const ncRequest = require('../notecard/notecard-request-node.js')
-const transactor = require('./inmem_transactor.js');
-
-const NotecardMessageTerminator = '\r\n';
-
-class BusMockTransactor extends transactor.InMemTransactor{
-    address;
-    busNumber;
-
-    constructor(readBufferSize = 0, writeBufferSize = 255){
-        const rw = new transactor.BufferReadWriter(readBufferSize, writeBufferSize);
-        super(rw);
-        this.address = null;
-        this.busNumber = null;
-    }
-
-    setResponseJson(response){
-        this.rw.readBuffer = Buffer.from(JSON.stringify(response) + NotecardMessageTerminator);
-        this.rw.readBufferIndex = 0;
-    }
-
-    reset(){
-        this.rw.writeBufferIndex = 0;
-        this.rw.writeBuffer.fill(0);
-        this.rw.readBufferIndex = 0;
-    }
-
-}
-
-function updateConfigNodeTransactor(n, t){
-    n.notecard.transactor = t;
-    n.notecard.connect();
-}
+const {MockSocket, MockSocketWithReceiveDelay, MockSocketWithSendDelay} = require('./mock_socket.js');
+const { getNode } = require('node-red-node-test-helper');
 
 
 helper.init(require.resolve('node-red'));
 
-const loadFlow = (flow) => {
-    const node = [ncConfig, ncRequest];
+const loadFlow = (node, flow) => {
     const p = new Promise((resolve, reject) => {
         try {
             helper.load(  node, flow, () => resolve()  );
@@ -51,6 +20,31 @@ const loadFlow = (flow) => {
         }
     });
     return p;
+}
+
+const loadAndGetNodeWithSocket = async (socket) => {
+    f = [{ id: "nc", type: "notecard-config", name: "Notecard Config", socket:socket},
+            { id: "nr", type: "notecard-request", name: "Notecard Request", notecard:"nc", wires:[["nh"]] },
+            { id: "nh", type: "helper" }
+           ];
+    const ncNode = [ncConfig, ncRequest];
+    await loadFlow(ncNode, f);
+
+    const nodes = { nc: helper.getNode("nc"),
+                    nr: helper.getNode("nr"),
+                    nh: helper.getNode("nh")}
+    return nodes;
+}
+
+const generateNodeInputPromise = (node) => {
+
+    return new Promise(resolve => {
+        node.on('input', (msg) => {
+            resolve(msg)
+        });
+    });
+
+    
 }
 
 
@@ -70,46 +64,34 @@ describe('Notecard Request Node', () => {
     afterEach(function() {
         helper.unload();
     });
-    const flow = [{ id: "nc", type: "notecard-config", name: "Notecard Config" },
-                  { id: "nr", type: "notecard-request", name: "Notecard Request", notecard:"nc", wires:[["nh"]] },
-                  { id: "nh", type: "helper" }
-                 ];
-
     
-    describe('request node receives message', () => {
+    describe('request node receives single message', () => {
+        it('should send out expected response', async () => {
 
-
-        const mockTransactor = new BusMockTransactor();
-
-        
-
-        const expectedResponse = {field1: "value1"};
-        mockTransactor.setResponseJson(expectedResponse);
-
-        it('should send out expected response', async() => {
-            mockTransactor.reset();
- 
-            await loadFlow(flow);
-            const nh = helper.getNode("nh");
-            const nr = helper.getNode("nr");
-            const nc = helper.getNode("nc");
-            updateConfigNodeTransactor(nc, mockTransactor);
-            
-            const p = new Promise((resolve, reject) => {
-                nh.on('input', (msg) => {
-                    resolve(msg)
-                });
-            })
+            const socket = new MockSocket(true);
+            socket.AddResponse(`{"my":"response"}\r\n`)
+            const {nc, nr, nh} = await loadAndGetNodeWithSocket(socket);
+            const p = generateNodeInputPromise(nh);
 
             nr.receive({payload:{req:"dostuff"}});
 
             const response = await p;
 
-            assert.deepEqual(response.payload, expectedResponse);
+            response.should.containDeep({payload:{my:"response"}});
+            
+            
+        });
 
+        it('should provide request to Notecard Socket', async () => {
+            const socket = new MockSocket(true);
+            socket.AddResponse(`{"my":"response"}\r\n`)
+            const {nc, nr, nh} = await loadAndGetNodeWithSocket(socket);
+            const p = generateNodeInputPromise(nh);
+            nr.receive({payload:{req:"dostuff"}});
+            await p;
+
+            nc.Notecard.Socket.ReceivedData[0].should.containEql(`{"req":"dostuff"}`)
         });
     });
-
-
 
 });

@@ -62,7 +62,7 @@ class Notecard {
 
         const requestStr = JSON.stringify(request) + REQUEST_MESSAGE_TERMINATOR;
         const responseStr = await this.enqueueSendRequest(requestStr);
-
+        
         return(JSON.parse(responseStr));
     }
 

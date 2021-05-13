@@ -1,19 +1,24 @@
 
 const notecard = require('./notecard.js');
 const transactor = require('./i2c-transactor.js')
+const uart = require('./uart-socket')
 
 
 const DEFAULT_I2C_BUS_NUMBER = 1;
 
 const DEFAULT_NOTECARD_I2C_ADDRESS = 0x17;
 
+
+
 module.exports = function(RED) {
     "use strict";
-    
-    class NotecardConfigNode {
+  
+    class NotecardConfigNode{
         
         constructor(config){
             RED.nodes.createNode(this, config);
+
+            this.Config = config;
 
             const t = new transactor.I2CTransactor();
             this.notecard = new notecard.Notecard(t);
@@ -28,14 +33,32 @@ module.exports = function(RED) {
                 address = DEFAULT_NOTECARD_I2C_ADDRESS;
             }
 
+            this.Notecard = new notecard.Notecard();
+            this.parseConfigForNotecardSocket(config);
+
             this.generateCloseListener();
 
             this.notecard.connect();
+
+
+        }
+
+        parseConfigForNotecardSocket(config){
+            if(!('socket' in config))
+                return;
+            
+            if(typeof config.socket === 'object'){
+                this.Notecard.Socket = config.socket;
+                return;
+            }
+
+            this.Notecard.Socket = new uart.UartSocket(config);
         }
 
         generateCloseListener() {
             this.on("close", () => {
                 this.notecard.disconnect();
+                this.Notecard.Disconnect();
             });
         }
 

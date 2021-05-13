@@ -3,7 +3,7 @@ module.exports = function(RED) {
     
     function NotecardRequestNode(config) {
         RED.nodes.createNode(this, config);
-        this.notecard = RED.nodes.getNode(config.notecard);
+        this.configNode = RED.nodes.getNode(config.notecard);
         
         this.payload = config.payload;
         this.payloadType = config.payloadType;
@@ -12,9 +12,12 @@ module.exports = function(RED) {
 
         node.on("input", async function (msg) {
 
-            const request = RED.util.evaluateNodeProperty(this.payload, this.payloadType, this,msg);
+            //const request = RED.util.evaluateNodeProperty(this.payload, this.payloadType, this,msg);
+            const request = msg.payload;
             
-            const response = await this.notecard.sendRequest(request);
+            const response = await this.configNode.Notecard.SendRequest(request);;
+            
+
             msg = Object.assign({}, msg);
             msg.payload = response;
             node.send(msg);
