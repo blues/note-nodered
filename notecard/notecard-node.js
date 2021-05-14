@@ -1,15 +1,7 @@
 
 const notecard = require('./notecard.js');
-const transactor = require('./i2c-transactor.js')
 const uart = require('./uart-socket.js');
 const i2c = require('./i2c-socket.js');
-
-
-const DEFAULT_I2C_BUS_NUMBER = 1;
-
-const DEFAULT_NOTECARD_I2C_ADDRESS = 0x17;
-
-
 
 module.exports = function(RED) {
     "use strict";
@@ -26,7 +18,7 @@ module.exports = function(RED) {
 
             this.generateCloseListener();
 
-            //this.notecard.connect();
+            this.Notecard.Connect()
 
 
         }

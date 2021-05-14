@@ -3,7 +3,7 @@ const notecard = require('../notecard/notecard.js');
 const {MockSocket, MockSocketWithReceiveDelay, MockSocketWithSendDelay} = require('./mock_socket.js')
 
 
-describe('notecard', () =>  {
+describe('Notecard', () =>  {
     
     describe('SendRequest', () => {
         context('single transaction', () => {

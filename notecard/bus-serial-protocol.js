@@ -139,4 +139,4 @@ async function reset(rw, payloadSize){
     
 }
 
-module.exports = {queryAvailableBytes, sendRequest, readResponse, reset, SendByteChunks, ReceiveByteChunks,QueryAvailableBytes};
+module.exports = {SendByteChunks, ReceiveByteChunks,QueryAvailableBytes};
