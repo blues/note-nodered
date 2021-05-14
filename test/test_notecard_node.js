@@ -69,12 +69,29 @@ describe('Notecard Config Node', function() {
             n1.Notecard.Socket.should.have.property('BaudRate', config.baudrate);
         });
 
+        it('should configure UART socket using baud rate string', async () => {
+            const b = 115200;
+            const config = {socket:'uart', port:'abc', baudrate: `${b}`};
+            const n1 = await loadAndGetNode(config);
+
+            n1.Notecard.Socket.should.have.property('Port', config.port);
+            n1.Notecard.Socket.should.have.property('BaudRate', b);
+        });
+
         it('should configure I2C socket with I2C Config options', async () => {
             const config = {socket:'i2c', address:0x19, busNumber:7};
             const n1 = await loadAndGetNode(config);
 
             n1.Notecard.Socket.should.have.property('Address', config.address);
             n1.Notecard.Socket.should.have.property('BusNumber', config.busNumber);
+        });
+
+        it('should configure I2C socket with I2C numeric config options as strings', async () => {
+            const config = {socket:'i2c', address:'0x19', busNumber:'7'};
+            const n1 = await loadAndGetNode(config);
+
+            n1.Notecard.Socket.should.have.property('Address', 0x19);
+            n1.Notecard.Socket.should.have.property('BusNumber', 7);
         });
 
         it('should apply arbitrary socket object if socket property is an object', async () => {

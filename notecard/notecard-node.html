@@ -6,30 +6,30 @@
     </div>
 
     <div class="form-row">
-        <label for="node-config-input-socket"><i class="fa fa-random"></i> Bus Number</label>
+        <label for="node-config-input-socket"><i class="fa fa-plug"></i> Connection</label>
         <select id="node-config-input-socket" class="socket-selector">
             <option value="i2c">I2C</option>
             <option value="uart">Serial</option>
         </select>   
     </div>
-    <div class="form-row">
+    <div class="form-row i2c-config-parameter">
         <label for="node-config-input-busNumber"><i class="fa fa-random"></i> Bus Number</label>
-        <input id="node-config-input-busNumber" class="i2c-config-parameter" placeholder="1" min=0 max=7 style="width:40px; height:16px;">
+        <input id="node-config-input-busNumber" class="" placeholder="1" min=0 max=7 style="width:40px; height:16px;">
     </div>
-    <div class="form-row">
+    <div class="form-row i2c-config-parameter">
         <label for="node-config-input-address"><i class="fa fa-address-card-o"></i> Address</label>
-        <input type="text" id="node-config-input-address" class="i2c-config-parameter" placeholder="0x17" min=3 max=127>
+        <input type="text" id="node-config-input-address" class="" placeholder="0x17" min=3 max=127>
     </div>
 
-    <div class="form-row">
+    <div class="form-row uart-config-parameter">
         <label for="node-config-input-port"><i class="fa fa-random"></i> Port</label>
-        <input id="node-config-input-port" class="uart-config-parameter" placeholder="">
+        <input type="text" id="node-config-input-port" class="" placeholder="">
     </div>
-    <div class="form-row">
+    <div class="form-row uart-config-parameter">
         <label for="node-config-input-baudrate"><i class="fa fa-random"></i> Baud Rate</label>
-        <select id="node-config-input-baudrate" class="uart-config-parameter">
-            <option value="9600">9600</option>
-            <option value="115200">115200</option>
+        <select id="node-config-input-baudrate" class="">
+            <option value=9600>9600</option>
+            <option value=115200>115200</option>
         </select>   
     </div>
 
@@ -96,6 +96,17 @@
                 min:0,
                 max:7
             });
+
+            $("#node-config-input-socket").change(()=>{
+                if($("#node-config-input-socket").val() === 'uart'){
+                    $(".i2c-config-parameter").hide();
+                    $(".uart-config-parameter").show();
+                    return;
+                }
+                $(".i2c-config-parameter").show();
+                $(".uart-config-parameter").hide();
+
+            })
 
             
         }

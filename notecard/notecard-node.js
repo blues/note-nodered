@@ -33,11 +33,20 @@ module.exports = function(RED) {
             }
 
             if(config.socket === 'uart'){
+                if('baudrate' in config)
+                    config.baudrate = parseInt(config.baudrate);
+
                 this.Notecard.Socket = new uart.UartSocket(config);
                 return;
             }
 
             if(config.socket === 'i2c'){
+                if('address' in config)
+                    config.address = parseInt(config.address);
+                
+                if('busNumber' in config)
+                    config.busNumber = parseInt(config.busNumber);
+                
                 this.Notecard.Socket = new i2c.I2CSocket(config);
                 return;
             }
