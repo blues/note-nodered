@@ -111,17 +111,15 @@ context('UART', () => {
         });
 
         describe('Send', () => {
-            it('should execute without error', async () => {
+            
+            it('should resolve without error', async () => {
+                const c = buildEchoCommand(`{"random":"command}`);
                 const s = new uart.UartSocket({port:port});
+
                 await s.Open();
-                const command = buildEchoCommand(`{"random":"command}`);
-                
-                try{
-                    await s.Send(command);
-                }
-                finally{
-                    await s.Close();
-                }
+                const p = s.Send(c);
+                return p.should.be.resolved().finally(()=> s.Close());
+
             });
 
             it('should throw an error if socket is not open', () => {
