@@ -1,11 +1,7 @@
-
-const assert = require('assert');
-
-const should = require("should");
 const helper = require("node-red-node-test-helper");
 const ncConfig = require('../notecard/notecard-node.js');
 const ncRequest = require('../notecard/notecard-request-node.js')
-const {MockSocket, MockSocketWithReceiveDelay, MockSocketWithSendDelay} = require('./mock_socket.js');
+const {MockSocket, _, ignore } = require('./mock_socket.js');
 const { getNode } = require('node-red-node-test-helper');
 
 

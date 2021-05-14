@@ -1,7 +1,8 @@
 
 const notecard = require('./notecard.js');
 const transactor = require('./i2c-transactor.js')
-const uart = require('./uart-socket')
+const uart = require('./uart-socket.js');
+const i2c = require('./i2c-socket.js');
 
 
 const DEFAULT_I2C_BUS_NUMBER = 1;
@@ -20,25 +21,12 @@ module.exports = function(RED) {
 
             this.Config = config;
 
-            const t = new transactor.I2CTransactor();
-            this.notecard = new notecard.Notecard(t);
-
-            var busNumber = parseInt(config.busno);
-            if(isNaN(busNumber)){
-                busNumber = DEFAULT_I2C_BUS_NUMBER
-            }
-
-            var address = parseInt(config.address);
-            if(isNaN(address)){
-                address = DEFAULT_NOTECARD_I2C_ADDRESS;
-            }
-
             this.Notecard = new notecard.Notecard();
             this.parseConfigForNotecardSocket(config);
 
             this.generateCloseListener();
 
-            this.notecard.connect();
+            //this.notecard.connect();
 
 
         }
@@ -52,7 +40,17 @@ module.exports = function(RED) {
                 return;
             }
 
-            this.Notecard.Socket = new uart.UartSocket(config);
+            if(config.socket === 'uart'){
+                this.Notecard.Socket = new uart.UartSocket(config);
+                return;
+            }
+
+            if(config.socket === 'i2c'){
+                this.Notecard.Socket = new i2c.I2CSocket(config);
+                return;
+            }
+
+            throw new Error('abc');
         }
 
         generateCloseListener() {
