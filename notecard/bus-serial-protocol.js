@@ -1,5 +1,16 @@
+const BYTE_AVAILABLE_QUERY_REQUEST = Buffer.from([0,0]);
+async function QueryAvailableBytes(readFn, writeFn){
+    const n = await writeFn(BYTE_AVAILABLE_QUERY_REQUEST);
+    if(n < BYTE_AVAILABLE_QUERY_REQUEST.length)
+        return(0);
+    
+    const r = await readFn(READ_FRAME_HEADER_LENGTH);
+    if(r.data[1] !== 0)
+        throw new Error('query returned unexpected value for byte that represents payload length');
 
-
+    return(r.data[0]);
+}
+//RENAME QueryAvailableBytes
 async function queryAvailableBytes(rw){
     const buffer = Buffer.from([0, 0]);
     const QUERY_REQUEST_SIZE = 2;
@@ -25,8 +36,24 @@ async function queryAvailableBytes(rw){
 
 }
 
+const SEND_BYTE_HEADER_LENGTH = 1;
+const DEFAULT_SEND_CHUNK_LENGTH = 250;
+async function SendByteChunks(writeFn, payload, chunkLength = DEFAULT_SEND_CHUNK_LENGTH){
 
+    while(payload.length > 0){
+        const numBytes = (payload.length > chunkLength) ? chunkLength : payload.length;
 
+        const b = Buffer.alloc(numBytes + SEND_BYTE_HEADER_LENGTH)
+        b[0] = numBytes;
+        payload.copy(b, SEND_BYTE_HEADER_LENGTH)
+        
+        
+        await writeFn(b);
+        payload = payload.slice(numBytes);
+    }
+}
+
+//RENAME SendByteChunks
 async function sendRequest(rw, request, payloadSize, token={isCancelled:false}, delayFn = async()=>{}){
     const REQUEST_FRAME_HEADER_SIZE = 1;
     const chunkSize = payloadSize + REQUEST_FRAME_HEADER_SIZE;
@@ -56,7 +83,32 @@ async function sendRequest(rw, request, payloadSize, token={isCancelled:false}, 
 
 }
 
+
+function sendReadRequest(writeFn, numBytesToRead=0){
+    const p = Buffer.from([0, numBytesToRead]);
+    return(writeFn(p));
+}
+const READ_FRAME_HEADER_LENGTH = 2;
+async function readBytes(readFn, numBytesToRead, dataBuffer){
+    const {numBytes, data} = await readFn(numBytesToRead + READ_FRAME_HEADER_LENGTH);
+    return({numBytesToRead:data[0],
+            data:Buffer.concat([dataBuffer, data.slice(READ_FRAME_HEADER_LENGTH)])})
+
+}
+async function ReceiveByteChunks(readFn, writeFn, numBytesToRead){
+    await sendReadRequest(writeFn, numBytesToRead);
+
+    let r = {numBytesToRead: numBytesToRead, data:Buffer.alloc(0)};
+    while(r.numBytesToRead > 0){
+        r = await readBytes(readFn, r.numBytesToRead, r.data);
+    }
+    return(r.data);
+
+}
+
 const RESPONSE_FRAME_HEADER_SIZE = 2;
+
+//RENAME ReceiveByteChunks
 async function readResponse(rw, numBytesAvailable, payloadSize, token={isCancelled:false}){
     
     const chunkSize = payloadSize + RESPONSE_FRAME_HEADER_SIZE;
@@ -87,4 +139,4 @@ async function reset(rw, payloadSize){
     
 }
 
-module.exports = {queryAvailableBytes, sendRequest, readResponse, reset};
+module.exports = {queryAvailableBytes, sendRequest, readResponse, reset, SendByteChunks, ReceiveByteChunks,QueryAvailableBytes};
