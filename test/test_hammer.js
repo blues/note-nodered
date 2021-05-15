@@ -1,22 +1,17 @@
 const notecard = require('../notecard/notecard.js');
 
 
-const isEnabled = true;
-const connection = 'uart';
-//const connection = 'i2c';
-
+const isEnabled = false;
+const connection = 'uart'; //'i2c';
 let numIterations = 25;
-
-
 
 (isEnabled ? describe : describe.skip)('Hammer Notecard with Requests', () => {
 
     const request = {req:"card.version"};
     const nc = new notecard.Notecard();
     
-    it('should survive being hammered by requests', async () => {
+    it(`should survive ${numIterations} requests`, async () => {
         nc.Socket = await getSocket(connection);
-        
         await nc.Connect();
         try{
             for(var i = 0; i< numIterations; i++){
