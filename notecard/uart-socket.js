@@ -9,6 +9,7 @@ class UartSocket{
     Port = "";
     BaudRate = 9600;
     _serial = null;
+    _readlineParser = null;
     constructor(config){
         if (typeof config !== 'object')
             return
@@ -32,6 +33,8 @@ class UartSocket{
 
         return new Promise((resolve, reject) => {
             this._serial = new SerialPort(this.Port, {baudRate:this.BaudRate});
+            this._readlineParser = new Readline({ delimiter: MESSAGE_TERMINATOR });
+            this._serial.pipe(this._readlineParser);
             this._serial.on("open", err => {
                 if(err){
                     reject(err);
@@ -64,7 +67,7 @@ class UartSocket{
             throw(new Error ('Socket not open'));
 
         await sendDataInChunks(this._serial, request);
-        const response = await readline(this._serial);
+        const response = await readline(this._readlineParser);
         return(response)
 
     }
@@ -133,11 +136,11 @@ async function drain(serial){
     });
 }
 
-async function readline(serial){
+async function readline(parser){
     return new Promise((resolve, reject) => {
-        let parser = new Readline({ delimiter: MESSAGE_TERMINATOR });
-        serial.pipe(parser);
-        parser.on('data', (d) => resolve(d));
+        parser.once('data', (d) => {
+            resolve(d);
+        });
     });
 
 }
