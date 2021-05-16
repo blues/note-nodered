@@ -1,7 +1,7 @@
 const helper = require("node-red-node-test-helper");
 const ncConfig = require('../notecard/notecard-node.js');
 const ncRequest = require('../notecard/notecard-request-node.js')
-const {MockConnector, _, ignore } = require('./mock_socket.js');
+const {MockConnector, _, ignore } = require('./mock_connector.js');
 const { getNode } = require('node-red-node-test-helper');
 
 
@@ -18,8 +18,8 @@ const loadFlow = (node, flow) => {
     return p;
 }
 
-const loadAndGetNodeWithConnector = async (socket) => {
-    f = [{ id: "nc", type: "notecard-config", name: "Notecard Config", socket:socket},
+const loadAndGetNodeWithConnector = async (connector) => {
+    f = [{ id: "nc", type: "notecard-config", name: "Notecard Config", connector:connector},
             { id: "nr", type: "notecard-request", name: "Notecard Request", notecard:"nc", wires:[["nh"]] },
             { id: "nh", type: "helper" }
            ];
@@ -64,9 +64,9 @@ describe('Notecard Request Node', () => {
     describe('request node receives single message', () => {
         it('should send out expected response', async () => {
 
-            const socket = new MockConnector(true);
-            socket.AddResponse(`{"my":"response"}\r\n`)
-            const {nc, nr, nh} = await loadAndGetNodeWithConnector(socket);
+            const connector = new MockConnector(true);
+            connector.AddResponse(`{"my":"response"}\r\n`)
+            const {nc, nr, nh} = await loadAndGetNodeWithConnector(connector);
             const p = generateNodeInputPromise(nh);
 
             nr.receive({payload:{req:"dostuff"}});
@@ -79,9 +79,9 @@ describe('Notecard Request Node', () => {
         });
 
         it('should provide request to Notecard Connector', async () => {
-            const socket = new MockConnector(true);
-            socket.AddResponse(`{"my":"response"}\r\n`)
-            const {nc, nr, nh} = await loadAndGetNodeWithConnector(socket);
+            const connector = new MockConnector(true);
+            connector.AddResponse(`{"my":"response"}\r\n`)
+            const {nc, nr, nh} = await loadAndGetNodeWithConnector(connector);
             const p = generateNodeInputPromise(nh);
             nr.receive({payload:{req:"dostuff"}});
             await p;

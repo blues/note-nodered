@@ -27,15 +27,15 @@ let numIterations = 25;
 
 });
 
-async function getConnector(socketType){
-    if(socketType === 'uart'){
-        const s = require('../notecard/uart-socket');
+async function getConnector(connectorType){
+    if(connectorType === 'uart'){
+        const s = require('../notecard/uart-connector');
         const port = await findNotecard(s)
         return new s.UartConnector({port:port});
         
         
-    }else if(socketType === 'i2c'){
-        const s = require('../notecard/i2c-socket');
+    }else if(connectorType === 'i2c'){
+        const s = require('../notecard/i2c-connector');
         return new s.I2CConnector()
     }else{
         throw new Error('Connector type not recognized')

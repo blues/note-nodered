@@ -84,7 +84,7 @@ context('UART', () => {
     
             });
 
-            it('should throw an error if socket is not open', () => {
+            it('should throw an error if connector is not open', () => {
                 const s = new uart.UartConnector({port:port});
                 s.IsOpen.should.be.false();
 
@@ -121,7 +121,7 @@ context('UART', () => {
 
             });
 
-            it('should throw an error if socket is not open', () => {
+            it('should throw an error if connector is not open', () => {
                 const s = new uart.UartConnector({port:port});
                 s.IsOpen.should.be.false();
 

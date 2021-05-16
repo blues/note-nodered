@@ -6,8 +6,8 @@
     </div>
 
     <div class="form-row">
-        <label for="node-config-input-socket"><i class="fa fa-plug"></i> Connection</label>
-        <select id="node-config-input-socket" class="socket-selector">
+        <label for="node-config-input-connector"><i class="fa fa-plug"></i> Connection</label>
+        <select id="node-config-input-connector" class="connector-selector">
             <option value="i2c">I2C</option>
             <option value="uart">Serial</option>
         </select>   
@@ -69,7 +69,7 @@
         category: 'config',
         defaults: {
             name: {value:"default"},
-            socket:{value:"i2c"},
+            connector:{value:"i2c"},
             busNumber: {value:"1",required:false},
             address: {value:"0x17",required:false},
             port:{value:"",required:false},
@@ -97,8 +97,8 @@
                 max:7
             });
 
-            $("#node-config-input-socket").change(()=>{
-                if($("#node-config-input-socket").val() === 'uart'){
+            $("#node-config-input-connector").change(()=>{
+                if($("#node-config-input-connector").val() === 'uart'){
                     $(".i2c-config-parameter").hide();
                     $(".uart-config-parameter").show();
                     return;

@@ -1,5 +1,5 @@
 
-const {MockConnector, MockConnectorWithReceiveDelay, MockConnectorWithSendDelay} = require('./mock_socket.js');
+const {MockConnector, MockConnectorWithReceiveDelay, MockConnectorWithSendDelay} = require('./mock_connector.js');
 
 describe('MockConnector', () => {
     describe('Open', () => {
@@ -12,7 +12,7 @@ describe('MockConnector', () => {
             m.IsOpen.should.be.true();
         });
 
-        it('should still result IsOpen returning true if socket already open', async () => {
+        it('should still result IsOpen returning true if connector already open', async () => {
             const m = new MockConnector(true);
             m.IsOpen.should.be.true();
 
@@ -23,7 +23,7 @@ describe('MockConnector', () => {
     });
 
     describe('Close', () => {
-        it('should result in IsOpen returning false, even if socket is already closed', async () => {
+        it('should result in IsOpen returning false, even if connector is already closed', async () => {
             const m = new MockConnector(true);
             m.IsOpen.should.be.true();
 

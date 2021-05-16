@@ -61,55 +61,55 @@ describe('Notecard Config Node', function() {
     });
 
     describe('Notecard Connector Config', () => {
-        it('should configure UART socket with Serial Config options', async () => {
-            const config = {socket:'uart', port:'abc', baudrate: 115200};
+        it('should configure UART connector with Serial Config options', async () => {
+            const config = {connector:'uart', port:'abc', baudrate: 115200};
             const n1 = await loadAndGetNode(config);
 
             n1.Notecard.Connector.should.have.property('Port', config.port);
             n1.Notecard.Connector.should.have.property('BaudRate', config.baudrate);
         });
 
-        it('should configure UART socket using baud rate string', async () => {
+        it('should configure UART connector using baud rate string', async () => {
             const b = 115200;
-            const config = {socket:'uart', port:'abc', baudrate: `${b}`};
+            const config = {connector:'uart', port:'abc', baudrate: `${b}`};
             const n1 = await loadAndGetNode(config);
 
             n1.Notecard.Connector.should.have.property('Port', config.port);
             n1.Notecard.Connector.should.have.property('BaudRate', b);
         });
 
-        it('should configure I2C socket with I2C Config options', async () => {
-            const config = {socket:'i2c', address:0x19, busNumber:7};
+        it('should configure I2C connector with I2C Config options', async () => {
+            const config = {connector:'i2c', address:0x19, busNumber:7};
             const n1 = await loadAndGetNode(config);
 
             n1.Notecard.Connector.should.have.property('Address', config.address);
             n1.Notecard.Connector.should.have.property('BusNumber', config.busNumber);
         });
 
-        it('should configure I2C socket with I2C numeric config options as strings', async () => {
-            const config = {socket:'i2c', address:'0x19', busNumber:'7'};
+        it('should configure I2C connector with I2C numeric config options as strings', async () => {
+            const config = {connector:'i2c', address:'0x19', busNumber:'7'};
             const n1 = await loadAndGetNode(config);
 
             n1.Notecard.Connector.should.have.property('Address', 0x19);
             n1.Notecard.Connector.should.have.property('BusNumber', 7);
         });
 
-        it('should apply arbitrary socket object if socket property is an object', async () => {
-            socket = {name:"value"};
-            const config = {socket:socket}
+        it('should apply arbitrary connector object if connector property is an object', async () => {
+            connector = {name:"value"};
+            const config = {connector:connector}
 
             const n1 = await loadAndGetNode(config);
 
-            n1.Notecard.Connector.should.deepEqual(socket);
+            n1.Notecard.Connector.should.deepEqual(connector);
 
         });
 
-        it.skip('should throw error if socket type is unknown', () => {
+        it.skip('should throw error if connector type is unknown', () => {
             const t = 'rando';
-            const config = {id:"n1", type:"notecard-config", name:"Notecard Config", socket:t};
+            const config = {id:"n1", type:"notecard-config", name:"Notecard Config", connector:t};
             const p =  loadFlow(ncNode, [config]);
 
-            return p.should.be.rejectedWith(`Cannot instantiate with invalid socket type '${t}'`);
+            return p.should.be.rejectedWith(`Cannot instantiate with invalid connector type '${t}'`);
         });
     });
 

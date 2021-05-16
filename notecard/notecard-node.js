@@ -24,15 +24,15 @@ module.exports = function(RED) {
         }
 
         parseConfigForNotecardConnector(config){
-            if(!('socket' in config))
+            if(!('connector' in config))
                 return;
             
-            if(typeof config.socket === 'object'){
-                this.Notecard.Connector = config.socket;
+            if(typeof config.connector === 'object'){
+                this.Notecard.Connector = config.connector;
                 return;
             }
 
-            if(config.socket === 'uart'){
+            if(config.connector === 'uart'){
                 if('baudrate' in config)
                     config.baudrate = parseInt(config.baudrate);
 
@@ -40,7 +40,7 @@ module.exports = function(RED) {
                 return;
             }
 
-            if(config.socket === 'i2c'){
+            if(config.connector === 'i2c'){
                 if('address' in config)
                     config.address = parseInt(config.address);
                 

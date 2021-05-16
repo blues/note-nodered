@@ -1,6 +1,6 @@
 
 const notecard = require('../notecard/notecard.js');
-const {MockConnector, MockConnectorWithReceiveDelay, MockConnectorWithSendDelay} = require('./mock_socket.js')
+const {MockConnector, MockConnectorWithReceiveDelay, MockConnectorWithSendDelay} = require('./mock_connector.js')
 
 
 describe('Notecard', () =>  {
