@@ -1,7 +1,7 @@
 const helper = require("node-red-node-test-helper");
 const ncConfig = require('../notecard/notecard-node.js');
 const ncRequest = require('../notecard/notecard-request-node.js')
-const {MockSocket, _, ignore } = require('./mock_socket.js');
+const {MockConnector, _, ignore } = require('./mock_socket.js');
 const { getNode } = require('node-red-node-test-helper');
 
 
@@ -18,7 +18,7 @@ const loadFlow = (node, flow) => {
     return p;
 }
 
-const loadAndGetNodeWithSocket = async (socket) => {
+const loadAndGetNodeWithConnector = async (socket) => {
     f = [{ id: "nc", type: "notecard-config", name: "Notecard Config", socket:socket},
             { id: "nr", type: "notecard-request", name: "Notecard Request", notecard:"nc", wires:[["nh"]] },
             { id: "nh", type: "helper" }
@@ -64,9 +64,9 @@ describe('Notecard Request Node', () => {
     describe('request node receives single message', () => {
         it('should send out expected response', async () => {
 
-            const socket = new MockSocket(true);
+            const socket = new MockConnector(true);
             socket.AddResponse(`{"my":"response"}\r\n`)
-            const {nc, nr, nh} = await loadAndGetNodeWithSocket(socket);
+            const {nc, nr, nh} = await loadAndGetNodeWithConnector(socket);
             const p = generateNodeInputPromise(nh);
 
             nr.receive({payload:{req:"dostuff"}});
@@ -78,15 +78,15 @@ describe('Notecard Request Node', () => {
             
         });
 
-        it('should provide request to Notecard Socket', async () => {
-            const socket = new MockSocket(true);
+        it('should provide request to Notecard Connector', async () => {
+            const socket = new MockConnector(true);
             socket.AddResponse(`{"my":"response"}\r\n`)
-            const {nc, nr, nh} = await loadAndGetNodeWithSocket(socket);
+            const {nc, nr, nh} = await loadAndGetNodeWithConnector(socket);
             const p = generateNodeInputPromise(nh);
             nr.receive({payload:{req:"dostuff"}});
             await p;
 
-            nc.Notecard.Socket.ReceivedData[0].should.containEql(`{"req":"dostuff"}`)
+            nc.Notecard.Connector.ReceivedData[0].should.containEql(`{"req":"dostuff"}`)
         });
     });
 

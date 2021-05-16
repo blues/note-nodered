@@ -11,7 +11,7 @@ let numIterations = 25;
     const nc = new notecard.Notecard();
     
     it(`should survive ${numIterations} requests`, async () => {
-        nc.Socket = await getSocket(connection);
+        nc.Connector = await getConnector(connection);
         await nc.Connect();
         try{
             for(var i = 0; i< numIterations; i++){
@@ -27,18 +27,18 @@ let numIterations = 25;
 
 });
 
-async function getSocket(socketType){
+async function getConnector(socketType){
     if(socketType === 'uart'){
         const s = require('../notecard/uart-socket');
         const port = await findNotecard(s)
-        return new s.UartSocket({port:port});
+        return new s.UartConnector({port:port});
         
         
     }else if(socketType === 'i2c'){
         const s = require('../notecard/i2c-socket');
-        return new s.I2CSocket()
+        return new s.I2CConnector()
     }else{
-        throw new Error('Socket type not recognized')
+        throw new Error('Connector type not recognized')
     }
 }
 

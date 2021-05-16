@@ -10,11 +10,11 @@ findNotecard().then((p) => {
     port = p;});
 
 context('UART', () => {
-    describe('UART Socket', () => {
+    describe('UART Connector', () => {
         describe('constructor', () => {
 
             it('should have default config values', () => {
-                const s = new uart.UartSocket();
+                const s = new uart.UartConnector();
                 assert.strictEqual(s.Port,"");
                 assert.strictEqual(s.BaudRate, 9600);
                 console.log(port)
@@ -23,14 +23,14 @@ context('UART', () => {
 
             it('should have correct port when passed in config object', () => {
                 const c = {port: "portABC"};
-                const s = new uart.UartSocket(c);
+                const s = new uart.UartConnector(c);
 
                 assert.strictEqual(s.Port, c.port);
             });
 
             it('should have correct baud rate when passed in config object', () => {
                 const c = {baudrate: 7};
-                const s = new uart.UartSocket(c);
+                const s = new uart.UartConnector(c);
 
                 assert.strictEqual(s.BaudRate, c.baudrate);
             });
@@ -40,7 +40,7 @@ context('UART', () => {
 
         describe('Open, IsOpen, and Close', () => {
             it('should open the port and \'IsOpen\' should be true, close the port', async () => {
-                const s = new uart.UartSocket({port:port})
+                const s = new uart.UartConnector({port:port})
                 await s.Open();
                 const tfOpen = s.IsOpen;
                 await s.Close();
@@ -52,7 +52,7 @@ context('UART', () => {
         });
 
         describe('IsOpen', () => {
-            const s = new uart.UartSocket({port:port});
+            const s = new uart.UartConnector({port:port});
             it('should return \'false\' if Open has not been called', () => {
                 const tf = s.IsOpen;
                 tf.should.be.false();
@@ -61,7 +61,7 @@ context('UART', () => {
 
         describe('Close', () => {
             it('should execute without error if port is already closed', async () => {
-                const s = new uart.UartSocket({port:port});
+                const s = new uart.UartConnector({port:port});
                 s.IsOpen.should.be.false();
 
                 await s.Close();
@@ -72,7 +72,7 @@ context('UART', () => {
 
         describe('SendReceive', () => {
             it('should respond to echo request', async () => {
-                const s = new uart.UartSocket({port:port});
+                const s = new uart.UartConnector({port:port});
                 await s.Open();
                 const message = `{"hello":"world"}`;
                 const request = buildEchoRequest(message);
@@ -86,14 +86,14 @@ context('UART', () => {
             });
 
             it('should throw an error if socket is not open', () => {
-                const s = new uart.UartSocket({port:port});
+                const s = new uart.UartConnector({port:port});
                 s.IsOpen.should.be.false();
 
-                return (s.SendReceive(`\n`)).should.be.rejectedWith({ message: 'Socket not open' });
+                return (s.SendReceive(`\n`)).should.be.rejectedWith({ message: 'Connector not open' });
             });
 
             it('should be able to send and receive large request body', async () => {
-                const s = new uart.UartSocket({port:port});
+                const s = new uart.UartConnector({port:port});
                 await s.Open();
 
                 const message = JSON.stringify(largeBody);
@@ -114,7 +114,7 @@ context('UART', () => {
             
             it('should resolve without error', async () => {
                 const c = buildEchoCommand(`{"random":"command}`);
-                const s = new uart.UartSocket({port:port});
+                const s = new uart.UartConnector({port:port});
 
                 await s.Open();
                 const p = s.Send(c);
@@ -123,10 +123,10 @@ context('UART', () => {
             });
 
             it('should throw an error if socket is not open', () => {
-                const s = new uart.UartSocket({port:port});
+                const s = new uart.UartConnector({port:port});
                 s.IsOpen.should.be.false();
 
-                return (s.Send(`\n`)).should.be.rejectedWith({ message: 'Socket not open' });
+                return (s.Send(`\n`)).should.be.rejectedWith({ message: 'Connector not open' });
             });
         });
 

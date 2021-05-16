@@ -3,7 +3,7 @@ const i2c = require('../notecard/i2c-socket.js');
 const isWin = process.platform === "win32";
 
 
-context('I2CSocket', () => {
+context('I2C Connector', () => {
 
     
 
@@ -12,7 +12,7 @@ context('I2CSocket', () => {
         
         describe('Open, IsOpen, and Close', () => {
             it('should open the port and IsOpen true, close the port and IsOpen false', async () => {
-                const s = new i2c.I2CSocket();
+                const s = new i2c.I2CConnector();
                 await s.Open();
                 const tf = s.IsOpen;
                 await s.Close();
@@ -25,13 +25,13 @@ context('I2CSocket', () => {
 
         describe('Open', () => {
             it('should succeed if able to detect Notecard', () => {
-                const s = new i2c.I2CSocket();
+                const s = new i2c.I2CConnector();
                 const p = s.Open();
                 return p.should.be.resolved().finally(()=>s.Close());
             });
 
             it('should throw error if unable to detect Notecard', () => {
-                const s = new i2c.I2CSocket({address:0x19});
+                const s = new i2c.I2CConnector({address:0x19});
                 const p = s.Open();
                 return p.should.be.rejectedWith('Unable to detect Notecard').finally(()=>s.Close());
             });
@@ -43,7 +43,7 @@ context('I2CSocket', () => {
                 const m = `{"hello":"world"}`;
                 const req = buildEchoRequest(m);
 
-                const s = new i2c.I2CSocket();
+                const s = new i2c.I2CConnector();
                 await s.Open();
                 try {
                     const res = await s.SendReceive(req);
@@ -57,7 +57,7 @@ context('I2CSocket', () => {
                 const m = JSON.stringify(largeBody);
                 const req = buildEchoRequest(m);
                 
-                const s = new i2c.I2CSocket();
+                const s = new i2c.I2CConnector();
                 await s.Open();
                 try {
                     const res = await s.SendReceive(req);
@@ -72,7 +72,7 @@ context('I2CSocket', () => {
             it('should resolve without error', async () => {
                 const m = `random-command`;
                 const c = buildCommand(m);
-                const s = new i2c.I2CSocket();
+                const s = new i2c.I2CConnector();
 
                 await s.Open();
                 const p = s.Send(c);
@@ -87,7 +87,7 @@ context('I2CSocket', () => {
         
         describe('Open', () => {
             it('should throw error', () => {
-                const s = new i2c.I2CSocket();
+                const s = new i2c.I2CConnector();
                 const p = s.Open();
                 return p.should.be.rejectedWith('I2C not supported on this system');
             });
@@ -98,7 +98,7 @@ context('I2CSocket', () => {
         
         describe('constructor', () => {
             it('should have correct default values', () => {
-                const s = new i2c.I2CSocket()
+                const s = new i2c.I2CConnector()
 
                 s.Address.should.equal(0x17);
                 s.BusNumber.should.equal(1);
@@ -106,30 +106,30 @@ context('I2CSocket', () => {
 
             it('should have correct address when passed in via config', () => {
                 const config = {address: 0x19};
-                const s = new i2c.I2CSocket(config);
+                const s = new i2c.I2CConnector(config);
 
                 s.Address.should.equal(0x19);
             })
 
             it('should have correct bus number when passed in via config', () => {
                 const config = {busNumber: 7};
-                const s = new i2c.I2CSocket(config);
+                const s = new i2c.I2CConnector(config);
 
                 s.BusNumber.should.equal(7);
             });
         });
 
         describe('IsOpen - all platforms', () => {
-            it('should return false if socket has not been opened', () => {
-                const s = new i2c.I2CSocket();
+            it('should return false if connector has not been opened', () => {
+                const s = new i2c.I2CConnector();
 
                 s.IsOpen.should.be.false();
             });
         });
 
         describe('Close - all platforms', () => {
-            it('should succeed if socket is not open', () => {
-                const s = new i2c.I2CSocket();
+            it('should succeed if connector is not open', () => {
+                const s = new i2c.I2CConnector();
                 s.IsOpen.should.be.false();
                 const p = s.Close();
 
@@ -138,20 +138,20 @@ context('I2CSocket', () => {
         });
 
         describe('SendReceive - all platforms', () => {
-            it('should throw an error is socket is not open', () => {
-                const s = new i2c.I2CSocket()
+            it('should throw an error is connector is not open', () => {
+                const s = new i2c.I2CConnector()
                 s.IsOpen.should.be.false();
 
-                return (s.SendReceive(`\n`)).should.be.rejectedWith({ message: 'Socket not open' });
+                return (s.SendReceive(`\n`)).should.be.rejectedWith({ message: 'Connector not open' });
             });
         });
 
         describe('Send - all platforms', () => {
-            it('should throw an error is socket is not open', () => {
-                const s = new i2c.I2CSocket()
+            it('should throw an error is connector is not open', () => {
+                const s = new i2c.I2CConnector()
                 s.IsOpen.should.be.false();
 
-                return (s.Send(`\n`)).should.be.rejectedWith({ message: 'Socket not open' });
+                return (s.Send(`\n`)).should.be.rejectedWith({ message: 'Connector not open' });
             });
         });
     });

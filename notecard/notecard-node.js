@@ -14,7 +14,7 @@ module.exports = function(RED) {
             this.Config = config;
 
             this.Notecard = new notecard.Notecard();
-            this.parseConfigForNotecardSocket(config);
+            this.parseConfigForNotecardConnector(config);
 
             this.generateCloseListener();
 
@@ -23,12 +23,12 @@ module.exports = function(RED) {
 
         }
 
-        parseConfigForNotecardSocket(config){
+        parseConfigForNotecardConnector(config){
             if(!('socket' in config))
                 return;
             
             if(typeof config.socket === 'object'){
-                this.Notecard.Socket = config.socket;
+                this.Notecard.Connector = config.socket;
                 return;
             }
 
@@ -36,7 +36,7 @@ module.exports = function(RED) {
                 if('baudrate' in config)
                     config.baudrate = parseInt(config.baudrate);
 
-                this.Notecard.Socket = new uart.UartSocket(config);
+                this.Notecard.Connector = new uart.UartConnector(config);
                 return;
             }
 
@@ -47,7 +47,7 @@ module.exports = function(RED) {
                 if('busNumber' in config)
                     config.busNumber = parseInt(config.busNumber);
                 
-                this.Notecard.Socket = new i2c.I2CSocket(config);
+                this.Notecard.Connector = new i2c.I2CConnector(config);
                 return;
             }
 

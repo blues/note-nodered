@@ -6,7 +6,7 @@ const REQUEST_MESSAGE_TERMINATOR = '\n';
 class Notecard {
     transactor = null;
     _queue;
-    Socket = null;
+    Connector = null;
     constructor(transactor = null){
         this.transactor = transactor;
         this._queue = new queue.PromiseQueue();
@@ -17,10 +17,10 @@ class Notecard {
     }
 
     async Connect() {
-        if(this.Socket === null)
-            throw new Error('Socket not defined');
+        if(this.Connector === null)
+            throw new Error('Connector not defined');
 
-        await this.Socket.Open();
+        await this.Connector.Open();
     }
 
     async disconnect() {
@@ -28,10 +28,10 @@ class Notecard {
     }
 
     async Disconnect() {
-        if(this.Socket === null)
-            throw new Error('Socket not defined');
+        if(this.Connector === null)
+            throw new Error('Connector not defined');
         
-        await this.Socket.Close();
+        await this.Connector.Close();
     }
 
     async request(req){
@@ -67,7 +67,7 @@ class Notecard {
     }
 
     enqueueSendRequest(r){
-        const generator = () => {return this.Socket.SendReceive(r)};
+        const generator = () => {return this.Connector.SendReceive(r)};
         return this._queue.add(generator);
     }
 
@@ -79,7 +79,7 @@ class Notecard {
     }
 
     enqueueSendCommand(c){
-        const generator = () => {return this.Socket.Send(c)};
+        const generator = () => {return this.Connector.Send(c)};
         return this._queue.add(generator);
     }
 

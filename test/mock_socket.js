@@ -1,5 +1,5 @@
 
-class MockSocket {
+class MockConnector {
     IsOpen = false;
     ReceivedData = [];
     _responseData = [];
@@ -30,7 +30,7 @@ class MockSocket {
     SendReceive(data){
         return new Promise((resolve, reject) => {
             if(!this.IsOpen)
-                reject(new Error('Socket not open'));
+                reject(new Error('Connector not open'));
 
             this.ReceivedData.push(data);
             this.ReceiveCount++;
@@ -47,7 +47,7 @@ class MockSocket {
     Send(data){
         return new Promise((resolve, reject) => {
             if(!this.IsOpen)
-                reject(new Error('Socket not open'));
+                reject(new Error('Connector not open'));
 
             this.ReceivedData.push(data);
             this.ReceiveCount++;
@@ -59,7 +59,7 @@ class MockSocket {
 
 }
 
-class MockSocketWithReceiveDelay extends MockSocket {
+class MockConnectorWithReceiveDelay extends MockConnector {
     _delay = [];
     constructor(isOpen = true){
         super(isOpen);
@@ -72,7 +72,7 @@ class MockSocketWithReceiveDelay extends MockSocket {
     SendReceive(data){
         return new Promise((resolve, reject) => {
             if(!this.IsOpen)
-                reject(new Error('Socket not open'));
+                reject(new Error('Connector not open'));
 
 
             if(this.ReceiveCount >= this._delay.length)
@@ -97,7 +97,7 @@ class MockSocketWithReceiveDelay extends MockSocket {
     }
 }
 
-class MockSocketWithSendDelay extends MockSocket {
+class MockConnectorWithSendDelay extends MockConnector {
     _delay = [];
     constructor(isOpen = true){
         super(isOpen);
@@ -110,7 +110,7 @@ class MockSocketWithSendDelay extends MockSocket {
     Send(data){
         return new Promise((resolve, reject) => {
             if(!this.IsOpen)
-                reject(new Error('Socket not open'));
+                reject(new Error('Connector not open'));
 
 
             if(this.ReceiveCount >= this._delay.length)
@@ -128,4 +128,4 @@ class MockSocketWithSendDelay extends MockSocket {
     }
 }
 
-module.exports = {MockSocket, MockSocketWithReceiveDelay, MockSocketWithSendDelay};
+module.exports = {MockConnector, MockConnectorWithReceiveDelay, MockConnectorWithSendDelay};

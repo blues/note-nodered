@@ -60,13 +60,13 @@ describe('Notecard Config Node', function() {
 
     });
 
-    describe('Notecard Socket Config', () => {
+    describe('Notecard Connector Config', () => {
         it('should configure UART socket with Serial Config options', async () => {
             const config = {socket:'uart', port:'abc', baudrate: 115200};
             const n1 = await loadAndGetNode(config);
 
-            n1.Notecard.Socket.should.have.property('Port', config.port);
-            n1.Notecard.Socket.should.have.property('BaudRate', config.baudrate);
+            n1.Notecard.Connector.should.have.property('Port', config.port);
+            n1.Notecard.Connector.should.have.property('BaudRate', config.baudrate);
         });
 
         it('should configure UART socket using baud rate string', async () => {
@@ -74,24 +74,24 @@ describe('Notecard Config Node', function() {
             const config = {socket:'uart', port:'abc', baudrate: `${b}`};
             const n1 = await loadAndGetNode(config);
 
-            n1.Notecard.Socket.should.have.property('Port', config.port);
-            n1.Notecard.Socket.should.have.property('BaudRate', b);
+            n1.Notecard.Connector.should.have.property('Port', config.port);
+            n1.Notecard.Connector.should.have.property('BaudRate', b);
         });
 
         it('should configure I2C socket with I2C Config options', async () => {
             const config = {socket:'i2c', address:0x19, busNumber:7};
             const n1 = await loadAndGetNode(config);
 
-            n1.Notecard.Socket.should.have.property('Address', config.address);
-            n1.Notecard.Socket.should.have.property('BusNumber', config.busNumber);
+            n1.Notecard.Connector.should.have.property('Address', config.address);
+            n1.Notecard.Connector.should.have.property('BusNumber', config.busNumber);
         });
 
         it('should configure I2C socket with I2C numeric config options as strings', async () => {
             const config = {socket:'i2c', address:'0x19', busNumber:'7'};
             const n1 = await loadAndGetNode(config);
 
-            n1.Notecard.Socket.should.have.property('Address', 0x19);
-            n1.Notecard.Socket.should.have.property('BusNumber', 7);
+            n1.Notecard.Connector.should.have.property('Address', 0x19);
+            n1.Notecard.Connector.should.have.property('BusNumber', 7);
         });
 
         it('should apply arbitrary socket object if socket property is an object', async () => {
@@ -100,7 +100,7 @@ describe('Notecard Config Node', function() {
 
             const n1 = await loadAndGetNode(config);
 
-            n1.Notecard.Socket.should.deepEqual(socket);
+            n1.Notecard.Connector.should.deepEqual(socket);
 
         });
 

@@ -1,10 +1,10 @@
 
-const {MockSocket, MockSocketWithReceiveDelay, MockSocketWithSendDelay} = require('./mock_socket.js');
+const {MockConnector, MockConnectorWithReceiveDelay, MockConnectorWithSendDelay} = require('./mock_socket.js');
 
-describe('MockSocket', () => {
+describe('MockConnector', () => {
     describe('Open', () => {
         it('should result in IsOpen returning true', async () => {
-            const m = new MockSocket(false);
+            const m = new MockConnector(false);
             m.IsOpen.should.be.false();
 
             await m.Open();
@@ -13,7 +13,7 @@ describe('MockSocket', () => {
         });
 
         it('should still result IsOpen returning true if socket already open', async () => {
-            const m = new MockSocket(true);
+            const m = new MockConnector(true);
             m.IsOpen.should.be.true();
 
             await m.Open();
@@ -24,7 +24,7 @@ describe('MockSocket', () => {
 
     describe('Close', () => {
         it('should result in IsOpen returning false, even if socket is already closed', async () => {
-            const m = new MockSocket(true);
+            const m = new MockConnector(true);
             m.IsOpen.should.be.true();
 
             await m.Close();
@@ -39,7 +39,7 @@ describe('MockSocket', () => {
 
     describe('AddResponse', () => {
         it('should append input argument to response array', () => {
-            const m = new MockSocket()
+            const m = new MockConnector()
             const r1 = `abcdef`;
             m.AddResponse(r1);
             m._responseData[0].should.equal(r1);
@@ -53,7 +53,7 @@ describe('MockSocket', () => {
     describe('Send', () => {
         
         it('should append the ReceivedData property to whatever was sent', async () => {
-            const m = new MockSocket();
+            const m = new MockConnector();
             const d1 = 'abcdefg';
             await m.Send(d1);
             m.ReceivedData[0].should.equal(d1);
@@ -65,7 +65,7 @@ describe('MockSocket', () => {
         });
 
         it('should increment the ReceiveCount property', async () => {
-            const m = new MockSocket();
+            const m = new MockConnector();
             m.ReceiveCount.should.equal(0);
 
             await m.Send('random data');
@@ -78,7 +78,7 @@ describe('MockSocket', () => {
 
     describe('SendReceive', () => {
         it('should append the ReceivedData property to whatever was sent', async () => {
-            const m = new MockSocket();
+            const m = new MockConnector();
             m.AddResponse(1);
             m.AddResponse(2);
             const d1 = 'abcdefg';
@@ -91,7 +91,7 @@ describe('MockSocket', () => {
         });
 
         it('should increment the ReceiveCount property', async () => {
-            const m = new MockSocket();
+            const m = new MockConnector();
             m.ReceiveCount.should.equal(0);
             m.AddResponse(1);
             m.AddResponse(2);
@@ -102,7 +102,7 @@ describe('MockSocket', () => {
         })
 
         it('should increment the ResponseCount property', async () => {
-            const m = new MockSocket();
+            const m = new MockConnector();
             m.ReceiveCount.should.equal(0);
             m.AddResponse(1);
             m.AddResponse(2);
@@ -113,7 +113,7 @@ describe('MockSocket', () => {
         })
 
         it('should return data added by AddResponse method', async () => {
-            const m = new MockSocket();
+            const m = new MockConnector();
             const r1 = 'my-first-response';
             const r2 = 'my-second-response';
             m.AddResponse(r1);
@@ -127,7 +127,7 @@ describe('MockSocket', () => {
         });
 
         it('should throw an error if no responses left to send as a reply', () => {
-            const m = new MockSocket();
+            const m = new MockConnector();
             
             return (m.SendReceive(`\n`)).should.be.rejectedWith({ message: 'No response data available' });
             

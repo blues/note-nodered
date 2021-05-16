@@ -4,7 +4,7 @@ const Readline = SerialPort.parsers.Readline
 const MAX_PAYLOAD_CHUNK_BYTES = 250;
 const MESSAGE_TERMINATOR = '\r\n';
 
-class UartSocket{
+class UartConnector{
 
     Port = "";
     BaudRate = 9600;
@@ -64,7 +64,7 @@ class UartSocket{
 
     async SendReceive(request){
         if(! this.IsOpen)
-            throw(new Error ('Socket not open'));
+            throw(new Error ('Connector not open'));
 
         await sendDataInChunks(this._serial, request);
         const response = await readline(this._readlineParser);
@@ -74,7 +74,7 @@ class UartSocket{
 
     async Send(data){
         if(! this.IsOpen)
-            throw(new Error ('Socket not open'));
+            throw(new Error ('Connector not open'));
 
         await sendDataInChunks(this._serial, data);
     }
@@ -115,7 +115,7 @@ function FindPort(searchParams){
     });
 }
 
-module.exports = {UartSocket, FindPort};
+module.exports = {UartConnector, FindPort};
 
 async function write(serial, data){
     return new Promise((resolve, reject) => {
@@ -138,7 +138,7 @@ async function drain(serial){
 
 async function readline(parser){
     return new Promise((resolve, reject) => {
-        parser.once('data', (d) => {
+        parser.once('data', (d) => {    
             resolve(d);
         });
     });

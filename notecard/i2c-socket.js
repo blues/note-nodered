@@ -1,6 +1,6 @@
 I2C = null;
 
-class I2CSocket{
+class I2CConnector{
 
     Address = 0x17;
     BusNumber = 1;
@@ -31,14 +31,14 @@ class I2CSocket{
     }
 
     async SendReceive(data){
-        throw new Error('Socket not open');
+        throw new Error('Connector not open');
     }
 
     async Send(data){
-        throw new Error('Socket not open');
+        throw new Error('Connector not open');
     }
 
 
 
 }
-module.exports = {I2CSocket};
+module.exports = {I2CConnector};
