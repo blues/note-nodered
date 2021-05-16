@@ -1,8 +1,7 @@
 
 
 var assert = require('assert');
-const should = require('should');
-const uart = require('../notecard/uart-socket.js');
+const uart = require('../notecard/uart-connector.js');
 
 var port = "";
 

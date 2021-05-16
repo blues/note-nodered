@@ -1,7 +1,7 @@
 
 const notecard = require('./notecard.js');
-const uart = require('./uart-socket.js');
-const i2c = require('./i2c-socket.js');
+const uart = require('./uart-connector.js');
+const i2c = require('./i2c-connector.js');
 
 module.exports = function(RED) {
     "use strict";

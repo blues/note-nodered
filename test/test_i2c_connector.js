@@ -1,4 +1,4 @@
-const i2c = require('../notecard/i2c-socket.js');
+const i2c = require('../notecard/i2c-connector.js');
 
 const isWin = process.platform === "win32";
 
