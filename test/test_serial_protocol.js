@@ -1,5 +1,8 @@
 const protocol = require('../notecard/bus-serial-protocol.js');
 
+const sinon = require('sinon');
+const should = require('should');
+
 class MockChannelReadWriter {
     
     ReadData = []
@@ -33,13 +36,8 @@ class MockChannelReadWriter {
 
     async Write(data){
         
-        let numBytes = data.length;
-        if(this.LimitWriteBufferSize && numBytes > this.WriteBufferSpaceAvailable)
-            numBytes = this.WriteBufferSpaceAvailable;
-
-        this.WriteData.push(data.slice(0,numBytes));
-        this.WriteBufferSpaceAvailable = this.WriteBufferSpaceAvailable - numBytes;
-
+        const numBytes = data.length;
+        this.WriteData.push(data);
         return(numBytes);
     }
 
@@ -76,13 +74,28 @@ describe('bus serial protocol', () => {
             const payload = Buffer.from(p1 + p2);
             const chunkLength = p1.length;
 
-            await protocol.SendByteChunks(w, payload, chunkLength);
+            await protocol.SendByteChunks(w, payload, ()=>{}, chunkLength);
 
             c.WriteData[0][0].should.equal(p1.length);
             c.WriteData[0].slice(1).should.deepEqual(Buffer.from(p1));
             c.WriteData[1][0].should.equal(p2.length);
             c.WriteData[1].slice(1).should.deepEqual(Buffer.from(p2));
         })
+
+        it('should call delay function at least once if chunk length is on sending message is exceeded', async () => {
+            const w = (d) => d.length;
+            const p1 = 'payload1___';
+            const p2 = 'payload2';
+            const payload = Buffer.from(p1 + p2);
+            const chunkLength = p1.length;
+
+            const delayFn = sinon.fake()
+
+            await protocol.SendByteChunks(w, payload, delayFn, chunkLength)
+
+            delayFn.calledOnce.should.be.true();
+
+        });
     });
 
     describe('ReceiveByteChunks', () => {

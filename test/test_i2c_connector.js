@@ -1,8 +1,9 @@
 const i2c = require('../notecard/i2c-connector.js');
+const should = require('should');
 
 const isWin = process.platform === "win32";
 
-
+//const should = require('should');
 context('I2C Connector', () => {
 
     
@@ -35,6 +36,16 @@ context('I2C Connector', () => {
                 const p = s.Open();
                 return p.should.be.rejectedWith('Unable to detect Notecard').finally(()=>s.Close());
             });
+
+            it('should success if connector already is open', async () => {
+                const s = new i2c.I2CConnector();
+                await s.Open()
+                s.IsOpen.should.be.true();
+
+                const p = s.Open();
+
+                return p.should.be.resolved().finally(()=>s.Close());
+            });
         });
 
 
@@ -47,7 +58,7 @@ context('I2C Connector', () => {
                 await s.Open();
                 try {
                     const res = await s.SendReceive(req);
-                    res.should.contain(m);
+                    res.should.containEql(m);
                 }finally{
                     s.Close()
                 }
@@ -61,7 +72,7 @@ context('I2C Connector', () => {
                 await s.Open();
                 try {
                     const res = await s.SendReceive(req);
-                    res.should.contain(m);
+                    res.should.containEql(m);
                 }finally{
                     s.Close()
                 }
@@ -164,8 +175,8 @@ function buildEchoRequest(body){
     return `{"req":"echo","body":${body}}\n`;
 }
 
-function buildEchoCommand(body){
-    return `{"cmd":"echo","body":${body}}\n`;
+function buildCommand(command){
+    return `{"cmd":"${command}"}\n`;
 }
 
 const largeBody = {

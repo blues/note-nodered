@@ -38,11 +38,11 @@ async function queryAvailableBytes(rw){
 
 const SEND_BYTE_HEADER_LENGTH = 1;
 const DEFAULT_SEND_CHUNK_LENGTH = 250;
-async function SendByteChunks(writeFn, payload, chunkLength = DEFAULT_SEND_CHUNK_LENGTH){
+async function SendByteChunks(writeFn, payload, delayFn = async()=>{}, chunkLength = DEFAULT_SEND_CHUNK_LENGTH){
 
     while(payload.length > 0){
         const numBytes = (payload.length > chunkLength) ? chunkLength : payload.length;
-
+        //console.log(`numbytes: ${numBytes}`)
         const b = Buffer.alloc(numBytes + SEND_BYTE_HEADER_LENGTH)
         b[0] = numBytes;
         payload.copy(b, SEND_BYTE_HEADER_LENGTH)
@@ -50,6 +50,11 @@ async function SendByteChunks(writeFn, payload, chunkLength = DEFAULT_SEND_CHUNK
         
         await writeFn(b);
         payload = payload.slice(numBytes);
+
+        if(payload.length <= 0)
+            return
+        
+        await delayFn()
     }
 }
 
