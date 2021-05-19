@@ -85,9 +85,15 @@ class UartConnector{
 
 function FindPort(searchParams){
 
+    caseInsensitiveEqual = (a,b) => {
+        return (typeof a === 'string' && typeof b === 'string'
+        ? a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0
+        : a === b);
+    }
+
     hasAllParams = (p) => {
         for(f in searchParams){
-            if(!p.hasOwnProperty(f) || p[f] != searchParams[f])
+            if(!p.hasOwnProperty(f) || !caseInsensitiveEqual(p[f],searchParams[f]))
                     return false
         }
         return true;

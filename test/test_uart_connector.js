@@ -16,7 +16,6 @@ context('UART', () => {
                 const s = new uart.UartConnector();
                 assert.strictEqual(s.Port,"");
                 assert.strictEqual(s.BaudRate, 9600);
-                console.log(port)
 
             });
 
@@ -143,9 +142,20 @@ context('UART', () => {
 
         });
 
-        it('should return a port path if port can be found', async () => {
+        it('should return a port path if port can be found (upper-case letters)', async () => {
             const params = {productId: '0001',
                             vendorId: '30A4'
+                            };
+            const p = await uart.FindPort(params);
+
+            p.should.be.Array();
+            p[0].should.be.String();
+            p[0].should.not.be.empty();
+        });
+
+        it('should return a port path if port can be found (lower-case letters)', async () => {
+            const params = {productId: '0001',
+                            vendorId: '30a4'
                             };
             const p = await uart.FindPort(params);
 
