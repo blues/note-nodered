@@ -1,25 +1,28 @@
 const notecard = require('../notecard/notecard.js');
+const should = require('should');
 
 
-const isEnabled = false;
-const connection = 'uart'; //'i2c';
+const isEnabled = true;
+const connection = 'i2c'; //'uart'; //'i2c';
 let numIterations = 25;
 
 (isEnabled ? describe : describe.skip)('Hammer Notecard with Requests', () => {
 
-    const request = {req:"card.version"};
+    const request = {req:"echo",body:{iter:-99}};
     const nc = new notecard.Notecard();
     
-    it(`should survive ${numIterations} requests`, async () => {
+    it(`should survive ${numIterations} echo requests`, async () => {
         nc.Connector = await getConnector(connection);
+        var i = 0;
         await nc.Connect();
         try{
-            for(var i = 0; i< numIterations; i++){
-                
+            for(i = 0; i< numIterations; i++){
+                request.body.iter = i    
                 const response = await nc.SendRequest(request);
-                response.should.not.be.empty();
+                response.body.iter.should.equal(i);
             }
         }finally{
+            console.log(`last iteration: ${i}`)
             await nc.Disconnect();
         }
     }).timeout(10000);
@@ -28,6 +31,7 @@ let numIterations = 25;
 });
 
 async function getConnector(connectorType){
+    const systemType = process.platform
     if(connectorType === 'uart'){
         const s = require('../notecard/uart-connector');
         const port = await findNotecard(s)
@@ -35,10 +39,12 @@ async function getConnector(connectorType){
         
         
     }else if(connectorType === 'i2c'){
+        if(systemType !== 'linux')
+            throw new Error(`i2c is not support on ${systemType}`)
         const s = require('../notecard/i2c-connector');
         return new s.I2CConnector()
     }else{
-        throw new Error('Connector type not recognized')
+        throw new Error(`Connector type ${connectorType} not recognized`)
     }
 }
 
