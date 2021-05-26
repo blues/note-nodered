@@ -49,7 +49,7 @@ describe('bus serial protocol', () => {
     describe('constructor', () => {
         it('should parse valid options without error', () => {
             const f = async () => {}
-            new protocol.SerialBus({read:f, write:f, delay:f});
+            new protocol.SerialBus({read:f, write:f});
         });
 
         it('should permit passing no config without error', () => {
@@ -97,14 +97,11 @@ describe('bus serial protocol', () => {
 
         it('should call delay function at least once if chunk length is on sending message is exceeded', async () => {
             const delayFn = sinon.fake()
-            const p = new protocol.SerialBus({write:(d) => {d.length}, 
-                                              delay:delayFn});
+            const p = new protocol.SerialBus({write:(d) => {d.length}});
             const p1 = 'payload1___';
             const p2 = 'payload2';
             const payload = Buffer.from(p1 + p2);
             const chunkLength = p1.length;
-
-            
 
             await p.SendByteChunks(payload, delayFn, chunkLength)
 
@@ -147,9 +144,7 @@ describe('bus serial protocol', () => {
         });
 
         it('should return data in channel Read buffer in multiple reads', async () => {
-            const c = new MockChannelReadWriter();
-            const p = new protocol.SerialBus({write:(d) => {c.Write(d)}, 
-                                              read: (n) => c.Read(n)});
+            const {p, c} = newSerialBusAndMockChannel();
             const b1 =Buffer.from('some data');
             const b2 =Buffer.from('some more data');
             c.AppendReadData(b1);

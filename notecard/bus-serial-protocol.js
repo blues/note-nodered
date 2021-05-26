@@ -2,7 +2,6 @@ class SerialBus {
 
     _read = async () => ({numBytesToRead: 0, data:Buffer.alloc(0)})
     _write = async () => {}
-    _delay = async () => {}
     constructor(config){
         if(config === undefined)
             return
@@ -13,16 +12,12 @@ class SerialBus {
         if('write' in config)
             this._write = config.write;
 
-        if('delay' in config)
-            this._delay = config.delay
-
     }
 
     async SendByteChunks(payload, delayFn = async()=>{}, chunkLength = DEFAULT_SEND_CHUNK_LENGTH){
 
         while(payload.length > 0){
             const numBytes = (payload.length > chunkLength) ? chunkLength : payload.length;
-            //console.log(`numbytes: ${numBytes}`)
             const b = Buffer.alloc(numBytes + SEND_BYTE_HEADER_LENGTH)
             b[0] = numBytes;
             payload.copy(b, SEND_BYTE_HEADER_LENGTH)
@@ -34,7 +29,7 @@ class SerialBus {
             if(payload.length <= 0)
                 return
             
-            await this._delay()
+            await delayFn()
         }
     }
 
@@ -75,31 +70,8 @@ async function QueryAvailableBytes(readFn, writeFn){
 
     return(r.data[0]);
 }
-//RENAME QueryAvailableBytes
-async function queryAvailableBytes(rw){
-    const buffer = Buffer.from([0, 0]);
-    const QUERY_REQUEST_SIZE = 2;
-    const QUERY_RESPONSE_SIZE = 2;
-
-    var numBytesWritten = await rw.write(QUERY_REQUEST_SIZE, buffer);
-    if(numBytesWritten < QUERY_REQUEST_SIZE ){
-        
-        throw new Error("this was too small");
-    }
-    
-    var numBytes = await rw.read(QUERY_RESPONSE_SIZE, buffer);
-    if(numBytes < QUERY_RESPONSE_SIZE){
-        throw new Error("number of response bytes is fewer than 2");
-    }
-
-    if(buffer[1] != 0){
-        throw new Error("response payload size on query is non-zero");
-    }
-
-    return buffer[0];
 
 
-}
 
 const SEND_BYTE_HEADER_LENGTH = 1;
 const DEFAULT_SEND_CHUNK_LENGTH = 250;

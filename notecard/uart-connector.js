@@ -3,6 +3,7 @@ const Readline = SerialPort.parsers.Readline
 
 const MAX_PAYLOAD_CHUNK_BYTES = 250;
 const MESSAGE_TERMINATOR = '\r\n';
+const SERIAL_WRITE_CHUNK_DELAY_MS = 250;
 
 class UartConnector{
 
@@ -163,6 +164,11 @@ async function sendDataInChunks(serial, data){
         await drain(serial);
         d = d.slice(n);
         n = d.length;
+        if(n <= 0)
+            return
+        await timeout(SERIAL_WRITE_CHUNK_DELAY_MS)
     }
     
 }
+
+const timeout = require('util').promisify(setTimeout)
