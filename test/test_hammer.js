@@ -3,15 +3,21 @@ const should = require('should');
 
 
 const isEnabled = true;
-const connection = 'i2c'; //'uart'; //'i2c';
 let numIterations = 25;
+
+const isLinux = process.platform === 'linux';
+
 
 (isEnabled ? describe : describe.skip)('Hammer Notecard with Requests', () => {
 
-    const request = {req:"echo",body:{iter:-99}};
-    const nc = new notecard.Notecard();
     
-    it(`should survive ${numIterations} echo requests`, async () => {
+    
+    it(`UART should survive ${numIterations} echo requests`, async ()=>{ await runIterations('uart')}).timeout(10000);
+    (isLinux ? it : it.skip)(`I2C should survive ${numIterations} echo requests`, async ()=>{await runIterations('i2c')}).timeout(10000);
+
+    async function runIterations(connection){
+        const request = {req:"echo",body:{iter:-99}};
+        const nc = new notecard.Notecard();
         nc.Connector = await getConnector(connection);
         var i = 0;
         await nc.Connect();
@@ -25,7 +31,7 @@ let numIterations = 25;
             console.log(`last iteration: ${i}`)
             await nc.Disconnect();
         }
-    }).timeout(10000);
+    }
     
 
 });
