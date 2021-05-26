@@ -46,35 +46,48 @@ class MockChannelReadWriter {
 
 describe('bus serial protocol', () => {
 
+    describe('constructor', () => {
+        it('should parse valid options without error', () => {
+            const f = async () => {}
+            new protocol.SerialBus({read:f, write:f, delay:f});
+        });
+
+        it('should permit passing no config without error', () => {
+            const p = new protocol.SerialBus();
+        });
+
+    });
+
+    
+
     describe('SendByteChunks', () => {
+
         it('should populate the first byte with the number of payload bytes sent', async () => {
-            const c = new MockChannelReadWriter()
+            const {p, c} = newSerialBusAndMockChannel();
             const payload = Buffer.from('my_payload');
-            const w = (d) => c.Write(d);
-            await protocol.SendByteChunks(w, payload);
+            
+            await p.SendByteChunks(payload);
 
             c.WriteData[0][0].should.equal(payload.length);
         });
 
         it('should populate from byte 2 onward the payload bytes sent', async () => {
-            const c = new MockChannelReadWriter();
-            const w = (d) => c.Write(d);
+            const {p, c} = newSerialBusAndMockChannel();
             const payload = Buffer.from('my_payload');
 
-            await protocol.SendByteChunks(w, payload);
+            await p.SendByteChunks(payload);
 
             c.WriteData[0].slice(1).should.deepEqual(payload);
         });
 
         it('should generate multiple writes if the payload exceeds chunk length', async () => {
-            const c = new MockChannelReadWriter();
-            const w = (d) => c.Write(d);
+            const {p, c} = newSerialBusAndMockChannel();
             const p1 = 'payload1___';
             const p2 = 'payload2';
             const payload = Buffer.from(p1 + p2);
             const chunkLength = p1.length;
 
-            await protocol.SendByteChunks(w, payload, ()=>{}, chunkLength);
+            await p.SendByteChunks(payload, ()=>{}, chunkLength);
 
             c.WriteData[0][0].should.equal(p1.length);
             c.WriteData[0].slice(1).should.deepEqual(Buffer.from(p1));
@@ -83,15 +96,17 @@ describe('bus serial protocol', () => {
         })
 
         it('should call delay function at least once if chunk length is on sending message is exceeded', async () => {
-            const w = (d) => d.length;
+            const delayFn = sinon.fake()
+            const p = new protocol.SerialBus({write:(d) => {d.length}, 
+                                              delay:delayFn});
             const p1 = 'payload1___';
             const p2 = 'payload2';
             const payload = Buffer.from(p1 + p2);
             const chunkLength = p1.length;
 
-            const delayFn = sinon.fake()
+            
 
-            await protocol.SendByteChunks(w, payload, delayFn, chunkLength)
+            await p.SendByteChunks(payload, delayFn, chunkLength)
 
             delayFn.calledOnce.should.be.true();
 
@@ -101,53 +116,46 @@ describe('bus serial protocol', () => {
     describe('ReceiveByteChunks', () => {
 
         it('should write 0 as the first bytes to the write buffer', async () => {
-            const c = new MockChannelReadWriter();
-            const w = (d) => c.Write(d);
-            const r = (n) => c.Read(n);
-
+            const {p, c} = newSerialBusAndMockChannel();
             c.AppendReadData(Buffer.from('some data'));
 
-            await protocol.ReceiveByteChunks(r, w, 0);
+            await p.ReceiveByteChunks(0);
 
             c.WriteData[0][0].should.equal(0);
         
         });
 
         it('should write numBytesToRead to second byte of the write buffer', async () => {
-            const c = new MockChannelReadWriter();
-            const w = (d) => c.Write(d);
-            const r = (n) => c.Read(n);
+            const {p, c} = newSerialBusAndMockChannel();
 
             c.AppendReadData(Buffer.from('some data'));
             const n = 1;
-            await protocol.ReceiveByteChunks(r, w, n);
+            await p.ReceiveByteChunks(n);
 
             c.WriteData[0][1].should.equal(n);
         
         });
 
         it('should return data in channel Read buffer', async () => {
-            const c = new MockChannelReadWriter();
-            const w = (d) => c.Write(d);
-            const r = (n) => c.Read(n);
+            const {p, c} = newSerialBusAndMockChannel();
             const b =Buffer.from('some data');
             c.AppendReadData(b);
 
-            const data = await protocol.ReceiveByteChunks(r, w, b.length);
+            const data = await p.ReceiveByteChunks(b.length);
 
             data.should.deepEqual(b);
         });
 
         it('should return data in channel Read buffer in multiple reads', async () => {
             const c = new MockChannelReadWriter();
-            const w = (d) => c.Write(d);
-            const r = (n) => c.Read(n);
+            const p = new protocol.SerialBus({write:(d) => {c.Write(d)}, 
+                                              read: (n) => c.Read(n)});
             const b1 =Buffer.from('some data');
             const b2 =Buffer.from('some more data');
             c.AppendReadData(b1);
             c.AppendReadData(b2);
 
-            const data = await protocol.ReceiveByteChunks(r, w, b1.length + b2.length);
+            const data = await p.ReceiveByteChunks(b1.length + b2.length);
 
             data.should.deepEqual(Buffer.concat([b1, b2]));
         });
@@ -155,62 +163,60 @@ describe('bus serial protocol', () => {
 
     describe('QueryAvailableBytes', () => {
         it('should write [0,0] to the write channel', async () => {
-            const {c, r, w} = newChannelReadWriters()
+            const {p, c} = newSerialBusAndMockChannel();
             c.ReadData.push(Buffer.from([0,0]));
 
-            await protocol.QueryAvailableBytes(r, w);
+            await p.QueryAvailableBytes();
 
             c.WriteData[0][0].should.equal(0);
             c.WriteData[0][1].should.equal(0);
         });
 
         it('should return 0 if read channel returns [0,0] - no bytes to read', async () => {
-            const {c, r, w} = newChannelReadWriters()
+            const {p, c} = newSerialBusAndMockChannel();
             c.ReadData.push(Buffer.from([0,0]));
 
-            const n = await protocol.QueryAvailableBytes(r, w);
+            const n = await p.QueryAvailableBytes();
 
             n.should.equal(0);
         });
 
         it('should return non-zero if read channel returns [n, 0] - bytes available to read', async () => {
-            const {c, r, w} = newChannelReadWriters()
+            const {p, c} = newSerialBusAndMockChannel();
             const N = 7;
             c.ReadData.push(Buffer.from([N,0]));
-            const n = await protocol.QueryAvailableBytes(r, w);
+            const n = await p.QueryAvailableBytes();
 
             n.should.equal(N);
         });
 
         it('should return 0 is not enough bytes were written by query', async () =>{
-            const {c, r, _} = newChannelReadWriters()
+            const {p, c} = newSerialBusAndMockChannel();
             c.ReadData.push(Buffer.from([99,99]));
-            const w = (n) => new Promise(resolve => resolve(1));
-            const n = await protocol.QueryAvailableBytes(r, w);
+            p._write = (n) => new Promise(resolve => resolve(1));
+            const n = await p.QueryAvailableBytes();
 
             n.should.equal(0);
         });
 
         it('should throw an error if the number of payload bytes is non-zero', () => {
-            const {c, r, w} = newChannelReadWriters()
+            const {p, c} = newSerialBusAndMockChannel();
             c.ReadData.push(Buffer.from([0,99]));
 
-            const p = protocol.QueryAvailableBytes(r, w);
+            const promise = p.QueryAvailableBytes();
 
-            return p.should.be.rejectedWith('query returned unexpected value for byte that represents payload length');
+            return promise.should.be.rejectedWith('query returned unexpected value for byte that represents payload length');
         });
     });
 });
 
 
+function newSerialBusAndMockChannel(){
+    const c = new MockChannelReadWriter()
+    const p = new protocol.SerialBus({write:(d) => {c.Write(d)}, 
+                                      read: (n) => c.Read(n)});
+    return {p:p,c:c}
 
-
-function newChannelReadWriters(){
-
-     let s = {c:new MockChannelReadWriter()}
-     s.r = (n) => s.c.Read(n);
-     s.w = (d) => s.c.Write(d);
-     return s
 }
 
 
