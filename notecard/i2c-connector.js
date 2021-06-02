@@ -17,7 +17,9 @@ const protocol = require('./bus-serial-protocol');
 const RESPONSE_BYTE_POLL_INTERVAL_MS = 5;
 const RESPONSE_BYTE_WAIT_INTERVAL_MS = 20;
 const WRITE_CHUNK_WAIT_INTERVAL_MS = 250;
-const MESSAGE_TERMINATOR = 0x0a;
+const RESPONSE_READ_POLL_INTERVAL_MS = 50;
+const MESSAGE_TERMINATOR = Buffer.from([0x0d,0x0a]);
+const RESPONSE_MESSAGE_FAILURE_SUFFIX = Buffer.from([0x0a,0x0a]);
 
 class I2CConnector{
 
@@ -37,6 +39,8 @@ class I2CConnector{
     }
 
     _bus = null;
+    _protocol = new protocol.SerialBus({'read': (n) => this.read(n),
+                                    'write': (b) => this.write(b)});
 
     get IsOpen() {
         return (this._bus != null);
@@ -65,40 +69,36 @@ class I2CConnector{
     async SendReceive(data){
         if(!this.IsOpen)
             throw new Error('Connector not open');
-        const r = (n) => this.read(n);
-        const w = (b) => this.write(b);
         const delay = () => new Promise(resolve => {setTimeout(()=>resolve(), WRITE_CHUNK_WAIT_INTERVAL_MS)});
         
         const receiveTimeoutMs = 1000;
-        const t = setTimeout(() => {
-            continueReceiving = false;
-            throw new Error("Timeout reading response from I2C bus");
-        }, receiveTimeoutMs);
+        const t = timeoutWithError(receiveTimeoutMs, "Timeout reading response from I2C bus" )
 
         const doRetry = true;
         while(doRetry){
-            await protocol.SendByteChunks(w, Buffer.from(data), delay);
+            await this._protocol.SendByteChunks(Buffer.from(data), delay);
             
             await timeout(RESPONSE_BYTE_WAIT_INTERVAL_MS);
             const numBytes = await this.responseBytesAreAvailable();
 
-            let continueReceiving = true;
+            const continueReceiving = true;
             
-
-            const RESPONSE_READ_POLL_INTERVAL_MS = 50;
             let response = Buffer.alloc(0);
             await timeout(1);
             while(continueReceiving){
 
-                const c = await protocol.ReceiveByteChunks(r, w, numBytes);
+                const c = await this._protocol.ReceiveByteChunks(numBytes);
                 response = Buffer.concat([response, c]);
 
-                const hasTerminator = Buffer.compare(c.slice(-2), Buffer.from([0x0d,0x0a])) === 0;
+                const hasTerminator = Buffer.compare(c.slice(-2), MESSAGE_TERMINATOR) === 0;
                 if(hasTerminator){
                     clearTimeout(t);
                     return response.toString();
                 }
-                if(Buffer.compare(c.slice(-2), Buffer.from([0x0a,0x0a])) === 0)
+
+                
+                const hasResponseFailure = Buffer.compare(c.slice(-2), RESPONSE_MESSAGE_FAILURE_SUFFIX) === 0;
+                if(hasResponseFailure)
                     break;
 
                 await timeout(RESPONSE_READ_POLL_INTERVAL_MS);
@@ -130,30 +130,23 @@ class I2CConnector{
     async read(numBytes){
         var buffer = Buffer.alloc(numBytes);
         const info = await this._bus.i2cRead(this.Address, numBytes, buffer);
-        //{numBytes: numBytes, data: data.slice(0, numBytes)};
 
         return({numBytes: info.bytesRead, data: buffer.slice(0, info.bytesRead)});
     }
 
     async responseBytesAreAvailable(){
         const timeoutMs = 2000;
-        const t = setTimeout(()=> {
-            continuePolling = false;
-            throw new Error("Timeout waiting for response bytes")
-        }, timeoutMs);
-        const r = (n) => this.read(n);
-        const w = (b) => this.write(b);
+        const t = timeoutWithError(timeoutMs, "Timeout waiting for response bytes");
 
-        let continuePolling = true;
-        while(continuePolling){
-            const numBytes = await protocol.QueryAvailableBytes(r, w);
-            if(numBytes > 0){
-                clearTimeout(t);
-                return(numBytes);
+        while(true){
+            const numBytes = await this._protocol.QueryAvailableBytes();
+
+            if(numBytes <= 0){
+                await timeout(RESPONSE_BYTE_POLL_INTERVAL_MS);
+                continue 
             }
-
-            await timeout(RESPONSE_BYTE_POLL_INTERVAL_MS);
-            
+            clearTimeout(t);
+            return(numBytes);
         }
     }
 
@@ -161,5 +154,9 @@ class I2CConnector{
 
 }
 module.exports = {I2CConnector};
+
+function timeoutWithError(durationMs, message){
+    return setTimeout(() => {throw new Error(message)}, durationMs)
+}
 
 const timeout = require('util').promisify(setTimeout)
