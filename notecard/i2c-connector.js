@@ -71,7 +71,7 @@ class I2CConnector{
             throw new Error('Connector not open');
         const delay = () => new Promise(resolve => {setTimeout(()=>resolve(), WRITE_CHUNK_WAIT_INTERVAL_MS)});
         
-        const receiveTimeoutMs = 1000;
+        const receiveTimeoutMs = 2500;
         const t = timeoutWithError(receiveTimeoutMs, "Timeout reading response from I2C bus" )
 
         const doRetry = true;
@@ -87,7 +87,12 @@ class I2CConnector{
             await timeout(1);
             while(continueReceiving){
 
-                const c = await this._protocol.ReceiveByteChunks(numBytes);
+                let c;
+                try{
+                 c = await this._protocol.ReceiveByteChunks(numBytes);
+                }catch{
+                    break;
+                }
                 response = Buffer.concat([response, c]);
 
                 const hasTerminator = Buffer.compare(c.slice(-2), MESSAGE_TERMINATOR) === 0;
