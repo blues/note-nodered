@@ -4,11 +4,11 @@ const queue = require('./promise-queue.js')
 const REQUEST_MESSAGE_TERMINATOR = '\n';
 
 class Notecard {
-    transactor = null;
+    
     _queue;
     Connector = null;
-    constructor(transactor = null){
-        this.transactor = transactor;
+    constructor(){
+        
         this._queue = new queue.PromiseQueue();
     }
 

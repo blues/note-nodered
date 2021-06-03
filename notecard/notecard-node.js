@@ -15,6 +15,15 @@ module.exports = function(RED) {
 
             this.Notecard = new notecard.Notecard();
             this.parseConfigForNotecardConnector(config);
+            
+            // try {
+            //     this.parseConfigForNotecardConnector(config);    
+            // } catch (error) {
+            //     console.error(error)
+            //     node.error(error)
+
+            // }
+            
 
             this.generateCloseListener();
 
@@ -50,14 +59,14 @@ module.exports = function(RED) {
                 this.Notecard.Connector = new i2c.I2CConnector(config);
                 return;
             }
-
-            throw new Error('abc');
+            console.log('should be throwing an error')
+            this.error("configuration error");
+            //throw new Error('abc');
         }
 
         generateCloseListener() {
-            this.on("close", () => {
-                this.notecard.disconnect();
-                this.Notecard.Disconnect();
+            this.on("close", (done) => {
+                this.Notecard.Disconnect().then(()=> done()).catch((err)=>done(err));
             });
         }
 
