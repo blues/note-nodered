@@ -15,15 +15,6 @@ module.exports = function(RED) {
 
             this.Notecard = new notecard.Notecard();
             this.parseConfigForNotecardConnector(config);
-            
-            // try {
-            //     this.parseConfigForNotecardConnector(config);    
-            // } catch (error) {
-            //     console.error(error)
-            //     node.error(error)
-
-            // }
-            
 
             this.generateCloseListener();
 
@@ -59,9 +50,9 @@ module.exports = function(RED) {
                 this.Notecard.Connector = new i2c.I2CConnector(config);
                 return;
             }
-            console.log('should be throwing an error')
-            this.error("configuration error");
-            //throw new Error('abc');
+            
+            throw new Error(`Cannot instantiate with invalid connector type '${config.connector}'`);
+
         }
 
         generateCloseListener() {
@@ -70,36 +61,7 @@ module.exports = function(RED) {
             });
         }
 
-        async sendRequest(request) {
-            
-            const response = await this.notecard.request(request);
-                
-            return response; 
-        }
-
-        get busNumber() {
-            return this.notecard.transactor.busNumber;
-        }
-
-        set busNumber(n) {
-            this.notecard.transactor.busNumber = n;
-        }
-
-        get address() {
-            return this.notecard.transactor.address;
-        }
-
-        set address(a) {
-            this.notecard.transactor.address = a;
-        }
-
-        get transactor() {
-            return this.notecard.transactor;
-        }
-
-        set transactor(t) {
-            this.notecard.transactor = t;
-        }
+        
     }
     
     RED.nodes.registerType("notecard-config", NotecardConfigNode);

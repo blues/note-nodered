@@ -1,4 +1,5 @@
 const i2c = require('../notecard/i2c-connector.js');
+const sinon = require('sinon');
 const should = require('should');
 
 const isWin = process.platform === "win32";
@@ -154,6 +155,22 @@ context('I2C Connector', () => {
                 s.IsOpen.should.be.false();
 
                 return (s.SendReceive(`\n`)).should.be.rejectedWith({ message: 'Connector not open' });
+            });
+
+            it('should retry if there was an error reading the I2C bus', async () => {
+                const v = '$'
+                let s = new i2c.I2CConnector()
+                s._bus = true
+                s.write = async (b) => {b.length};
+                s.read = sinon.stub()
+                         .onCall(0).resolves({numBytes:2, data: Buffer.from([3,0])})
+                         .onCall(1).resolves({numBytes:2, data: Buffer.from([0,3, v.charCodeAt(0),10,10])})
+                         .onCall(2).resolves({numBytes:2, data: Buffer.from([3,0])})
+                         .onCall(3).resolves({numBytes:2, data: Buffer.from([0,3, v.charCodeAt(0),13,10])})
+
+                const r = await s.SendReceive(`\n`);
+                s.read.callCount.should.equal(4)
+                r.should.equal(v.concat('\r\n'))
             });
         });
 

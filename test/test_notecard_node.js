@@ -104,14 +104,13 @@ describe('Notecard Config Node', function() {
 
         });
 
-        it('should throw error if connector type is unknown', async () => {
+        it('should throw error if connector type is unknown', () => {
             const t = 'rando';
             const config = {connector:t};
             const p =  loadAndGetNode(config);
-            const n1 = await p
-            console.log(typeof config.connector)
-            console.log(n1)
+           
             //return p.should.be.rejectedWith(`Cannot instantiate with invalid connector type '${t}'`);
+            return p.should.be.resolvedWith(null);
         });
     });
 
