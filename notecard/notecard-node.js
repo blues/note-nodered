@@ -2,6 +2,7 @@
 const notecard = require('./notecard.js');
 const uart = require('./uart-connector.js');
 const i2c = require('./i2c-connector.js');
+const util = require('./notecard-util.js');
 
 module.exports = function(RED) {
     "use strict";
@@ -65,4 +66,13 @@ module.exports = function(RED) {
     }
     
     RED.nodes.registerType("notecard-config", NotecardConfigNode);
+
+    RED.httpAdmin.get('/notecard/serialports', async function (req, res, next) {
+        try{
+            const p = await util.FindNotecardSerial();
+            res.status(200).send(p);
+        }catch{
+            res.status(500).send('Internal server error');
+        }
+    });
 }

@@ -114,5 +114,17 @@ describe('Notecard Config Node', function() {
         });
     });
 
+    describe('Web Request GET available serial ports',() => {
+
+        it('should respond with serial port config list if ports available', async () => {
+            connector = {name:"value"};
+            const config = {connector:connector}
+            const n1 = await loadAndGetNode(config);
+            const res = await helper.request().get('/notecard/serialports').expect(200)
+            res.body.should.not.be.empty();
+            
+        });
+    });
+
     
 });

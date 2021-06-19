@@ -21,9 +21,12 @@
         <input type="text" id="node-config-input-address" class="" placeholder="0x17" min=3 max=127>
     </div>
 
+    
+
     <div class="form-row uart-config-parameter">
         <label for="node-config-input-port"><i class="fa fa-random"></i> Port</label>
-        <input type="text" id="node-config-input-port" class="" placeholder="">
+        <select id="node-config-input-port" class="" placeholder=""></select>
+        <a id="serial-port-search-trigger" class="editor-button"><i class="fa fa-rotate-right"></i></a>
     </div>
     <div class="form-row uart-config-parameter">
         <label for="node-config-input-baudrate"><i class="fa fa-random"></i> Baud Rate</label>
@@ -36,21 +39,41 @@
 </script>
 
 <script type="text/html" data-help-name="notecard-config">
-    <p>Manages connection to Notecard over an I2C connection on a Raspberry Pi or similar device</p>
-    <p>It queues requests in a FIFO buffer if requests arrive while a request is currently in process.</p>
+    <p>Manages connection to Notecard over a UART or I2C connection on a Raspberry Pi or similar device</p>
+    <p>It queues Notecard requests in a FIFO buffer if new requests arrive while a request is currently in process.</p>
     
 
     <h3>Properties</h3>
         <dl class="message-properties">
+            <dt>Name
+                <span class="property-type"> string</span>
+            </dt>
+            <dd>Identifier of the configuration node used by other Notecard nodes in flows</dd>
+
+            <dt>Connection
+                <span class="property-type"> enum</span>
+            </dt>
+            <dd>Select which type of connection is used to communicate with Notecard</dd>
+
             <dt>Bus Number 
                 <span class="property-type">number</span>
             </dt>
             <dd> I2C port number to use for Notecard transactions </dd>
 
-            <dt class="optional">Address 
+            <dt>Address 
                 <span class="property-type"> string</span>
             </dt>
             <dd> address of the Notecard on the I2C bus. This overrides the <code>address</code> field on the node input. </dd>
+
+            <dt>Port
+                <span class="property-type">string</span>
+            </dt>
+            <dd>Serial port identifier. "*" indicates port selection is identified as a Notecard</dd>
+
+            <dt>Baud Rate
+                <span class="property-type">number</span>
+            </dt>
+            <dd>Baud rate in bits-per-second for communicating with Notecard over serial.</dd>
 
         </dl>
     
@@ -108,7 +131,44 @@
 
             })
 
-            
+            function findSerialPorts(){
+                $("#node-config-input-connector").attr('disabled', 'disabled')
+                $('#serial-port-search-trigger').addClass('disabled')
+                $('#node-config-input-port').attr('disabled', 'disabled')
+
+                function cleanUp(){
+                    $('#node-config-input-port').removeAttr('disabled')
+                    $('#serial-port-search-trigger').removeClass('disabled')
+                    $("#node-config-input-connector").removeAttr('disabled')
+                }
+
+                $.get('notecard/serialports')
+                    .done((ports) =>{
+                        $('#node-config-input-port').empty()
+                        ports.forEach((p, i) => {
+                            let n = p.name;
+                            if(p.isNotecard){
+                                n = "*" + n;
+                            }
+                            
+                            $('#node-config-input-port').append(`<option value="${p}">${n}</option>`)
+                        })
+                        cleanUp()
+                    })
+                    .fail(()=>{
+                        cleanUp();
+                        RED.notify("Something went wrong searching for serial ports", "error")
+                    })
+            }
+
+            findSerialPorts();
+
+            $('#serial-port-search-trigger').click(function() {
+                if(!$('#serial-port-search-trigger').hasClass('disabled')){
+                    findSerialPorts();
+                }
+            })
+
         }
     });
 </script>
