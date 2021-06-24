@@ -29,14 +29,18 @@ class MockConnector {
 
     SendReceive(data){
         return new Promise((resolve, reject) => {
-            if(!this.IsOpen)
+            if(!this.IsOpen){
                 reject(new Error('Connector not open'));
+                return
+            }
 
             this.ReceivedData.push(data);
             this.ReceiveCount++;
 
-            if(this.ResponseCount >= this._responseData.length)
+            if(this.ResponseCount >= this._responseData.length){
                 reject(new Error('No response data available'));
+                return
+            }
 
             const response = this._responseData[this.ResponseCount];
             this.ResponseCount++;

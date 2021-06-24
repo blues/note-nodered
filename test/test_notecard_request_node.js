@@ -88,6 +88,21 @@ describe('Notecard Request Node', () => {
 
             nc.Notecard.Connector.ReceivedData[0].should.containEql(`{"req":"dostuff"}`)
         });
+
+        it('should log error if exception occurs sending request to Notecard', async () => {
+            let connector = new MockConnector(false)
+
+            
+            const {nc, nr, nh} = await loadAndGetNodeWithConnector(connector);
+            await nc.Notecard.Connector.Close()
+            
+            const p = generateNodeInputPromise(nh);
+            nr.receive({payload:{req:"dostuff"}});
+            await p
+
+            
+            nr.error.should.be.calledOnce()
+        });
     });
 
 });
