@@ -49,6 +49,14 @@ describe('UART Connector', () => {
         });
     });
 
+    describe('Open', () => {
+        it('should be rejected if serial port is not available', () => {
+            const s = new uart.UartConnector({port:"nonsense"})
+            const p = s.Open()
+            return p.should.be.rejected()
+        });
+    })
+
     describe('IsOpen', () => {
         const s = new uart.UartConnector({port:port});
         it('should return \'false\' if Open has not been called', () => {

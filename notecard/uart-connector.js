@@ -33,16 +33,15 @@ class UartConnector{
     async Open(){
 
         return new Promise((resolve, reject) => {
-            this._serial = new SerialPort(this.Port, {baudRate:this.BaudRate});
-            this._readlineParser = new Readline({ delimiter: MESSAGE_TERMINATOR });
-            this._serial.pipe(this._readlineParser);
-            this._serial.on("open", err => {
+            this._serial = new SerialPort(this.Port, {baudRate:this.BaudRate}, err => {
                 if(err){
                     reject(err);
                     return
                 }
                 resolve();
-            })
+            });
+            this._readlineParser = new Readline({ delimiter: MESSAGE_TERMINATOR });
+            this._serial.pipe(this._readlineParser);
         })
     }
 
