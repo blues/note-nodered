@@ -79,7 +79,6 @@ async function SendByteChunks(writeFn, payload, delayFn = async()=>{}, chunkLeng
 
     while(payload.length > 0){
         const numBytes = (payload.length > chunkLength) ? chunkLength : payload.length;
-        //console.log(`numbytes: ${numBytes}`)
         const b = Buffer.alloc(numBytes + SEND_BYTE_HEADER_LENGTH)
         b[0] = numBytes;
         payload.copy(b, SEND_BYTE_HEADER_LENGTH)
@@ -95,44 +94,13 @@ async function SendByteChunks(writeFn, payload, delayFn = async()=>{}, chunkLeng
     }
 }
 
-//RENAME SendByteChunks
-async function sendRequest(rw, request, payloadSize, token={isCancelled:false}, delayFn = async()=>{}){
-    const REQUEST_FRAME_HEADER_SIZE = 1;
-    const chunkSize = payloadSize + REQUEST_FRAME_HEADER_SIZE;
-    const buffer = Buffer.alloc(chunkSize);
-    
-    var requestSlice = request.slice(0);
-
-    
-    var bytesToSend = requestSlice.length;
-    while(token.isCancelled === false){
-        
-        bytesToSend = (bytesToSend > payloadSize) ? payloadSize : bytesToSend;
-        requestSlice.copy(buffer, REQUEST_FRAME_HEADER_SIZE, 0, bytesToSend);
-
-        buffer[0] = bytesToSend;
-        var numBytesToWrite = bytesToSend + REQUEST_FRAME_HEADER_SIZE;
-        var numBytesWritten = await rw.write(numBytesToWrite, buffer);
-        
-        requestSlice = requestSlice.slice(numBytesWritten - REQUEST_FRAME_HEADER_SIZE);
-        bytesToSend = requestSlice.length;
-        if(bytesToSend <= 0){
-            return;
-        }
-        await delayFn();
-    }
-    return;
-
-}
-
-
 function sendReadRequest(writeFn, numBytesToRead=0){
     const p = Buffer.from([0, numBytesToRead]);
     return(writeFn(p));
 }
 const READ_FRAME_HEADER_LENGTH = 2;
 async function readBytes(readFn, numBytesToRead, dataBuffer){
-    const {numBytes, data} = await readFn(numBytesToRead + READ_FRAME_HEADER_LENGTH);
+    const {_, data} = await readFn(numBytesToRead + READ_FRAME_HEADER_LENGTH);
     return({numBytesToRead:data[0],
             data:Buffer.concat([dataBuffer, data.slice(READ_FRAME_HEADER_LENGTH)])})
 
@@ -146,39 +114,6 @@ async function ReceiveByteChunks(readFn, writeFn, numBytesToRead){
     }
     return(r.data);
 
-}
-
-const RESPONSE_FRAME_HEADER_SIZE = 2;
-
-//RENAME ReceiveByteChunks
-async function readResponse(rw, numBytesAvailable, payloadSize, token={isCancelled:false}){
-    
-    const chunkSize = payloadSize + RESPONSE_FRAME_HEADER_SIZE;
-    var readRequest = Buffer.from([0, 0]);
-    var readResponse = Buffer.alloc(chunkSize);
-    var response = Buffer.alloc(0);
-
-    while (numBytesAvailable > 0 && token.isCancelled === false){
-        var numBytesRequested = (numBytesAvailable > payloadSize) ? payloadSize : numBytesAvailable;
-        readRequest[1] = numBytesRequested;
-
-        var numBytesWritten = await rw.write(readRequest.length, readRequest);
-
-        var numBytesToRead = numBytesRequested + RESPONSE_FRAME_HEADER_SIZE;
-
-        var numBytesRead = await rw.read(numBytesToRead, readResponse);
-        numBytesAvailable = readResponse[0];
-
-        response = Buffer.concat([response, readResponse.slice(RESPONSE_FRAME_HEADER_SIZE, numBytesRead)])
-    }
-    
-    return response;
-}
-
-async function reset(rw, payloadSize){
-    
-    await readResponse(rw, payloadSize, payloadSize);
-    
 }
 
 module.exports = {SerialBus, SendByteChunks, ReceiveByteChunks,QueryAvailableBytes};

@@ -103,6 +103,20 @@ describe('Notecard Request Node', () => {
             
             nr.error.should.be.calledOnce()
         });
+
+        it('should provide original request as field on output message', async () => {
+            const connector = new MockConnector(true);
+            connector.AddResponse(`{"my":"response"}\r\n`)
+            const {nc, nr, nh} = await loadAndGetNodeWithConnector(connector);
+            const p = generateNodeInputPromise(nh);
+
+            const request = {req:"dostuff"}
+            nr.receive({payload:request});
+
+            const response = await p;
+
+            response.should.containDeep({request:request});
+        })
     });
 
 });
