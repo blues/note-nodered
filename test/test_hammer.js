@@ -40,7 +40,7 @@ async function getConnector(connectorType){
     const systemType = process.platform
     if(connectorType === 'uart'){
         const s = require('../notecard/uart-connector');
-        const port = await findNotecard(s)
+        const port = await findNotecardUart()
         return new s.UartConnector({port:port});
         
         
@@ -57,11 +57,12 @@ async function getConnector(connectorType){
 
 
 
-async function findNotecard(s) {
+async function findNotecardUart() {
+    util = require('../notecard/notecard-util.js')
     notecardUsbParams = {productId: '0001',
                         vendorId: '30A4'
                         }
-    const p = await s.FindPort(notecardUsbParams);
+    const p = await util.FindPort(notecardUsbParams);
 
     return(p[0]);
 

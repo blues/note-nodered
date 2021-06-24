@@ -2,6 +2,7 @@
 
 var assert = require('assert');
 const uart = require('../notecard/uart-connector.js');
+const util = require('../notecard/notecard-util.js')
 
 var port = "";
 
@@ -146,7 +147,7 @@ async function findNotecard() {
     notecardUsbParams = {productId: '0001',
                         vendorId: '30A4'
                         }
-    const p = await uart.FindPort(notecardUsbParams);
+    const p = await util.FindPort(notecardUsbParams);
 
     return(p[0]);
 

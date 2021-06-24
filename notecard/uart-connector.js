@@ -1,7 +1,7 @@
 const SerialPort = require("serialport");
 const Readline = SerialPort.parsers.Readline
 
-const MAX_PAYLOAD_CHUNK_BYTES = 250;
+const MAX_PAYLOAD_CHUNK_BYTES = 1500;
 const MESSAGE_TERMINATOR = '\r\n';
 const SERIAL_WRITE_CHUNK_DELAY_MS = 250;
 
@@ -83,45 +83,7 @@ class UartConnector{
 
 }
 
-function FindPort(searchParams){
-
-    caseInsensitiveEqual = (a,b) => {
-        return (typeof a === 'string' && typeof b === 'string'
-        ? a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0
-        : a === b);
-    }
-
-    hasAllParams = (p) => {
-        for(f in searchParams){
-            if(!p.hasOwnProperty(f) || !caseInsensitiveEqual(p[f],searchParams[f]))
-                    return false
-        }
-        return true;
-    };
-
-    parsePortList = (ports) =>{
-        let list = []
-        for (let i = 0; i < ports.length; i++){
-            const p = ports[i];
-            if(hasAllParams(p)){
-            
-                list.push(p.path)
-            }
-        }
-        return list;
-    }
-
-    return new Promise((resolve, reject) => {
-        SerialPort.list().then(
-            ports => {
-                resolve(parsePortList(ports))
-            },
-            err => reject(err)
-        )
-    });
-}
-
-module.exports = {UartConnector, FindPort};
+module.exports = {UartConnector};
 
 async function write(serial, data){
     return new Promise((resolve, reject) => {
