@@ -4,7 +4,6 @@ const should = require('should');
 
 const isWin = process.platform === "win32";
 
-//const should = require('should');
 context('I2C Connector', () => {
 
     

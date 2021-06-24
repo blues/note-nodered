@@ -18,10 +18,13 @@ module.exports = function(RED) {
             this.parseConfigForNotecardConnector(config);
 
             this.generateCloseListener();
+           
+            this.connectToNotecard();
 
-            this.Notecard.Connect()
+        }
 
-
+        connectToNotecard() {
+            this.Notecard.Connect().catch((err) => this.error(err.message));
         }
 
         parseConfigForNotecardConnector(config){

@@ -1,4 +1,5 @@
 const helper = require("node-red-node-test-helper");
+const { assert } = require("sinon");
 const ncNode = require('../notecard/notecard-node.js');
 
 
@@ -35,6 +36,15 @@ describe('Notecard Config Node', function() {
         });
 
         return p;
+    }
+
+    const loadNode = (f) => {
+        if(f === undefined)
+            f = {};
+        f.id = "n1";
+        f.type = "notecard-config";
+        f.name = "Notecard Config";
+        return loadFlow(ncNode, [f]);
     }
 
     const loadAndGetNode = async (f) => {
@@ -112,7 +122,17 @@ describe('Notecard Config Node', function() {
             //return p.should.be.rejectedWith(`Cannot instantiate with invalid connector type '${t}'`);
             return p.should.be.resolvedWith(null);
         });
+
+        it('should log error if Notecard connector fails to connect',  async () => {
+            const m = 'throw error on connection'
+            const config = {connector:{Open:async () => {throw new Error(m)}}}
+            const n1 = await loadAndGetNode(config);
+            n1.error.should.be.calledWithExactly(m);
+            
+        })
     });
+
+
 
     describe('Web Request GET available serial ports',() => {
 
