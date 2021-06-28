@@ -63,7 +63,7 @@
             <dt>Address 
                 <span class="property-type"> string</span>
             </dt>
-            <dd> address of the Notecard on the I2C bus. This overrides the <code>address</code> field on the node input. </dd>
+            <dd> address of the Notecard on the I2C bus.</dd>
 
             <dt>Port
                 <span class="property-type">string</span>
@@ -77,7 +77,28 @@
 
         </dl>
     
-    <!-- <h3>Details</h3> -->
+    <h3>Details</h3>
+        <p><code>Connection</code> sets which type of wired interface to use for communicating with Notecard.
+        The <code>Serial</code> option is a UART connection that also works over the Notecard USB interface.
+        The <code>I2C</code> option connects to Notecard over I2C bus. It is designed for using the Notecard as
+        peripheral to a Raspberry Pi or similar device.</p>
+
+        <p>The <code>Port</code> option for Serial connections provides a list of available
+        serial ports.  Port names prefixed with an asterisk "*" are identified as USB serial
+        ports that are recognized as connected to Notecard</p>
+
+        <p><code>Baud Rate</code> is 9600 for USB and the standard RX/TX pins.  It is 115200
+        when using AUX-RX/AUX-TX pins.  See <a href="https://discuss.blues.io/t/what-is-aux-rx-tx-and-how-do-i-use-it/153">What is AUX RX/TX and how do I use it?</a></p>
+
+        <p>This configuration block manages all communications to a specific Notecard.
+        All Notecard nodes in a flow send messages and receive responses through the associate
+        Notecard configuration node.
+        </p>
+        <p>The Notecard configuration node has an internal FIFO buffer to prevent
+            messages from multiple Notecard nodes in a flow from conflicting.
+            This is a blocking process. The Notecard nodes in the flow will
+            not output a message until they receive a response, or a timeout occurs.
+        </p>
         
     
     <h3>References</h3>

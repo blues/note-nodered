@@ -43,12 +43,22 @@
 
     <h3>Properties</h3>
         <dl class="message-properties">
+            <dt class="required">Notecard <span class="property-type"> enum</span></dt>
+            <dd> configuration node used to exchange information with a specific Notecard.</dd>
+        </dl>
+        <dl class="message-properties">
             <dt class="optional">Payload <span class="property-type"> JSON</span></dt>
             <dd> request to send to Notecard. This overrides the <code>payload</code> field on the node input.</dd>
         </dl>
     
-    <!-- <h3>Details</h3> -->
+    <h3>Details</h3>
+        <p>Use the <code>payload</code> property to override or transform the request that is
+        provided via the node input</p>
         
+        <p>There can be more than one Notecard configuration node.  Each Notecard Request Node can
+            only reference one configuration Node. To send the same request to multiple Notecards,
+            use multiple Notecard request Nodes.
+        </p>
     
     <h3>References</h3>
         <ul>

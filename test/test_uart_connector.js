@@ -120,7 +120,7 @@ describe('UART Connector', () => {
     describe('Send', () => {
         
         it('should resolve without error', async () => {
-            const c = buildEchoCommand(`{"random":"command}`);
+            const c = buildEchoCommand(`{"random":"command"}`);
             const s = new uart.UartConnector({port:port});
 
             await s.Open();
