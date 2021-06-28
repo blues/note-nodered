@@ -28,8 +28,10 @@ module.exports = function(RED) {
         }
 
         parseConfigForNotecardConnector(config){
-            if(!('connector' in config))
-                return;
+            if(!('connector' in config)){
+                config.connector = "i2c"
+            }
+                
             
             if(typeof config.connector === 'object'){
                 this.Notecard.Connector = config.connector;

@@ -71,6 +71,9 @@ describe('Notecard Config Node', function() {
     });
 
     describe('Notecard Connector Config', () => {
+
+        
+
         it('should configure UART connector with Serial Config options', async () => {
             const config = {connector:'uart', port:'abc', baudrate: 115200};
             const n1 = await loadAndGetNode(config);
@@ -88,6 +91,13 @@ describe('Notecard Config Node', function() {
             n1.Notecard.Connector.should.have.property('BaudRate', b);
         });
 
+        it('should default to I2C connector with I2C Config options', async () => {
+            const config = {address:0x19, busNumber:7};
+            const n1 = await loadAndGetNode(config);
+
+            n1.Notecard.Connector.should.have.property('Address', config.address)
+            n1.Notecard.Connector.should.have.property('BusNumber', config.busNumber)
+        });
         it('should configure I2C connector with I2C Config options', async () => {
             const config = {connector:'i2c', address:0x19, busNumber:7};
             const n1 = await loadAndGetNode(config);
