@@ -1,8 +1,8 @@
 ﻿# note-nodered
 
-Node JS library with Custom Node Red package for communication with Blues Wireless Notecard over I²C.
+Node JS library with Custom Node Red package for communication with Blues Wireless Notecard over I²C or Serial (UART) connections.
 
-This Node Red package enables you to control a Notecard by developing flows in Node Red running on a Raspberry Pi.
+This Node Red package enables you to control the Notecard by developing flows in Node Red where a server is connected to the Notecard. For I²C connections, a Raspberry Pi or similar host is required.
 
 ## Installation
 
@@ -15,11 +15,16 @@ For manual installation, follow the steps suggested by the following video:
 You can access the source in the repo here:
   https://github.com/blues/note-nodered 
 
-### Enable I2C on Raspberry Pi
-The I2C interface on the Raspberry Pi must be enabled.
+### Enable I2C or Serial on Raspberry Pi
+The I2C interface on the Raspberry Pi must be enabled if using a [Notecarrier-PI Hat](https://shop.blues.io/products/carr-pi)
 
-Assuming you are using a Raspbian-based operating system distribution on the Raspberry Pi, follow steps 1-7 here
-https://dev.blues.io/build/tutorials/sensor-tutorial/notecarrier-pi/raspberry-pi/python/#configure-the
+The serial interface on the Raspberry Pi must be enabled if using a [Notecarrier-A*](https://shop.blues.io/collections/notecarrier) or [Notecarrier-B](https://shop.blues.io/collections/notecarrier/products/carr-b).
+
+Assuming you are using a Raspbian-based operating system distribution on the Raspberry Pi:
+ - [I2C configuration](https://dev.blues.io/build/tutorials/sensor-tutorial/notecarrier-pi/raspberry-pi/python/#configure-the)
+
+ - [Serial configuration](https://dev.blues.io/build/tutorials/sensor-tutorial/notecarrier-al/raspberry-pi/python/#configure-serial-between-and)
+
 
 
 ## Usage
@@ -41,13 +46,21 @@ If there is no configuration node available, select `Add new notecard-config`, a
 The default Notecard Configuration node settings support the default Raspberry Pi and Notecard configurations.
 In most cases, additional configuration is not required.
 
+__Connection__
+Select the connection type used to communicate with Notecard.  When using the Notecarrier-Pi, make sure `I2C` is selected.  If using a USB port, select `serial`.
+
 __Bus Number__
-To communicate with the Notecard, the I2C bus number must be set to the port number being used by the I2C module on the Raspberry Pi.  It is a value between [0, 7] inclusive.
+The I2C bus number must be set to the port number being used by the I2C module on the Raspberry Pi.  It is a value between [0, 7] inclusive.
 
 __Address__
 The default address for the Notecard is 0x17 (23).  If that has been changed, then set the address value to the new Notecard address.
 ![Communication Settings](images/notecard_request_comms_properties.png)
 
+__Port__ 
+Serial port which Notecard is connected to when using `serial` communication option.
+
+__Baud Rate__
+The baud rate in bits-per-second used to communicate with Notecard over serial. Use 115200 only if using the [Auxiliary Serial Port](https://discuss.blues.io/t/what-is-aux-rx-tx-and-how-do-i-use-it/153).
 
 ### Sending Notecard Requests
 The `Notecard Request` node accepts Notecard requests formed as JSON object.
@@ -98,7 +111,7 @@ The [examples](examples/) directory contains example Node Red flows:
 ## Compatibility
 Version 1.x.x is not backwards compatible with version 0.x.x.  There is no expectation of support for importing flows developed with previous versions of this package.
 
-Version 1.x.x does *not* support JSON strings as request inputs or response outputs.  All requests and responses are formated as a JSON object.
+Version 1.x.x does *not* support JSON strings as request inputs or response outputs.  All requests and responses are formatted as a JSON object.
 
 ### Migration
 `Notecard Request` nodes are a drop in replacement in the diagram if using JSON objects for input and output.  

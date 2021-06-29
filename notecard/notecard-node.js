@@ -1,75 +1,83 @@
 
 const notecard = require('./notecard.js');
-const transactor = require('./i2c-transactor.js')
-
-
-const DEFAULT_I2C_BUS_NUMBER = 1;
-
-const DEFAULT_NOTECARD_I2C_ADDRESS = 0x17;
+const uart = require('./uart-connector.js');
+const i2c = require('./i2c-connector.js');
+const util = require('./notecard-util.js');
 
 module.exports = function(RED) {
     "use strict";
-    
-    class NotecardConfigNode {
+  
+    class NotecardConfigNode{
         
         constructor(config){
             RED.nodes.createNode(this, config);
 
-            const t = new transactor.I2CTransactor();
-            this.notecard = new notecard.Notecard(t);
+            this.Config = config;
 
-            var busNumber = parseInt(config.busno);
-            if(isNaN(busNumber)){
-                busNumber = DEFAULT_I2C_BUS_NUMBER
-            }
-
-            var address = parseInt(config.address);
-            if(isNaN(address)){
-                address = DEFAULT_NOTECARD_I2C_ADDRESS;
-            }
+            this.Notecard = new notecard.Notecard();
+            this.parseConfigForNotecardConnector(config);
 
             this.generateCloseListener();
+           
+            this.connectToNotecard();
 
-            this.notecard.connect();
+        }
+
+        connectToNotecard() {
+            this.Notecard.Connect().catch((err) => this.error(err.message));
+        }
+
+        parseConfigForNotecardConnector(config){
+            if(!('connector' in config)){
+                config.connector = "i2c"
+            }
+                
+            
+            if(typeof config.connector === 'object'){
+                this.Notecard.Connector = config.connector;
+                return;
+            }
+
+            if(config.connector === 'uart'){
+                if('baudrate' in config)
+                    config.baudrate = parseInt(config.baudrate);
+
+                this.Notecard.Connector = new uart.UartConnector(config);
+                return;
+            }
+
+            if(config.connector === 'i2c'){
+                if('address' in config)
+                    config.address = parseInt(config.address);
+                
+                if('busNumber' in config)
+                    config.busNumber = parseInt(config.busNumber);
+                
+                this.Notecard.Connector = new i2c.I2CConnector(config);
+                return;
+            }
+            
+            throw new Error(`Cannot instantiate with invalid connector type '${config.connector}'`);
+
         }
 
         generateCloseListener() {
-            this.on("close", () => {
-                this.notecard.disconnect();
+            this.on("close", (done) => {
+                this.Notecard.Disconnect().then(()=> done()).catch((err)=>done(err));
             });
         }
 
-        async sendRequest(request) {
-            
-            const response = await this.notecard.request(request);
-                
-            return response; 
-        }
-
-        get busNumber() {
-            return this.notecard.transactor.busNumber;
-        }
-
-        set busNumber(n) {
-            this.notecard.transactor.busNumber = n;
-        }
-
-        get address() {
-            return this.notecard.transactor.address;
-        }
-
-        set address(a) {
-            this.notecard.transactor.address = a;
-        }
-
-        get transactor() {
-            return this.notecard.transactor;
-        }
-
-        set transactor(t) {
-            this.notecard.transactor = t;
-        }
+        
     }
     
     RED.nodes.registerType("notecard-config", NotecardConfigNode);
+
+    RED.httpAdmin.get('/notecard/serialports', async function (req, res, next) {
+        try{
+            const p = await util.FindNotecardSerial();
+            res.status(200).send(p);
+        }catch{
+            res.status(500).send('Internal server error');
+        }
+    });
 }

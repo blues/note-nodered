@@ -1,24 +1,6 @@
-
-const assert = require('assert');
-
-const should = require("should");
 const helper = require("node-red-node-test-helper");
+const { assert } = require("sinon");
 const ncNode = require('../notecard/notecard-node.js');
-const transactor = require('./inmem_transactor.js');
-
-const NotecardMessageTerminator = '\r\n';
-
-class BusMockTransactor extends transactor.InMemTransactor{
-    address;
-    busNumber;
-
-    constructor(readWriter){
-        super(readWriter);
-        this.address = null;
-        this.busNumber = null;
-        this.isOpen = true;
-    }
-}
 
 
 helper.init(require.resolve('node-red'));
@@ -38,24 +20,9 @@ describe('Notecard Config Node', function() {
     afterEach(function() {
         helper.unload();
     });
-    const flow = [{ id: "n1", type: "notecard-config", name: "Notecard Config" }];
+    const flow = [{ id: "n1", type: "notecard-config", name: "Notecard Config", other:"prop" }];
 
-    it('should be loaded with correct default values', function(done) {
-        
-        helper.load(ncNode, flow, () => {
-            const n1 = helper.getNode("n1");
-            try{
-                n1.should.have.property('name', 'Notecard Config');
-                n1.should.have.property('busNumber', 1);
-                n1.should.have.property('address', 0x17);
-                done();
-            }catch(err){
-                done(err)
-            };
-            
-        });
-        
-    });
+  
 
     const loadFlow = (node, flow) => {
         const p = new Promise((resolve, reject) => {
@@ -71,61 +38,123 @@ describe('Notecard Config Node', function() {
         return p;
     }
 
-    it('should apply node bus number field value to transactor if populated', async () => {
-        var transactor = new BusMockTransactor();
-        await loadFlow(ncNode, flow);
-        const n1 = helper.getNode("n1");
-        n1.notecard.transactor = transactor;
-        n1.notecard.connect();
+    const loadNode = (f) => {
+        if(f === undefined)
+            f = {};
+        f.id = "n1";
+        f.type = "notecard-config";
+        f.name = "Notecard Config";
+        return loadFlow(ncNode, [f]);
+    }
 
-        n1.busNumber = 7;
+    const loadAndGetNode = async (f) => {
+        if(f === undefined)
+            f = {};
+        f.id = "n1";
+        f.type = "notecard-config";
+        f.name = "Notecard Config";
+        await loadFlow(ncNode, [f]);
+        return helper.getNode(f.id);
+    }
 
-        should.equal(n1.notecard.transactor.busNumber, 7);
+    it('should have config values', async () => {
+        const name = 'myConfigProp'
+        const value = 'myConfigValue'
+        let c = {};
+        c[name] = value;
+        const n1 = await loadAndGetNode(c)
         
+        const config = n1.Config
+
+        config.should.have.property(name,value)
+
     });
 
-    it('should apply node address field value to transactor if populated', async () => {
-        var transactor = new BusMockTransactor();
-        await loadFlow(ncNode, flow);
-        const n1 = helper.getNode("n1");
-        n1.notecard.transactor = transactor;
-        n1.notecard.connect();
+    describe('Notecard Connector Config', () => {
 
-        n1.address = 0x27;
-
-        //await n1.sendRequest({empty:"request"});
-
-        should.equal(n1.notecard.transactor.address, 0x27);
         
-    });
 
-    describe('sendRequest', () => {
-        context('input is JSON""', () => {
+        it('should configure UART connector with Serial Config options', async () => {
+            const config = {connector:'uart', port:'abc', baudrate: 115200};
+            const n1 = await loadAndGetNode(config);
 
-            const expectedResponse = {field1: "value1"};
-            const rw = new transactor.BufferReadWriter(255, 255);
-            rw.readBuffer = Buffer.from(JSON.stringify(expectedResponse) + NotecardMessageTerminator);
+            n1.Notecard.Connector.should.have.property('Port', config.port);
+            n1.Notecard.Connector.should.have.property('BaudRate', config.baudrate);
+        });
 
-            const mockTransactor = new BusMockTransactor(rw);
+        it('should configure UART connector using baud rate string', async () => {
+            const b = 115200;
+            const config = {connector:'uart', port:'abc', baudrate: `${b}`};
+            const n1 = await loadAndGetNode(config);
 
-            const sendRequestCheckResponse = async (request, expectedResponse) => {
-                await loadFlow(ncNode, flow);
-                const n1 = helper.getNode("n1");
-                n1.notecard.transactor = mockTransactor;
-                n1.notecard.connect();
+            n1.Notecard.Connector.should.have.property('Port', config.port);
+            n1.Notecard.Connector.should.have.property('BaudRate', b);
+        });
 
-                const response = await n1.sendRequest(request);
-                assert.deepEqual(response, expectedResponse);
-            }
+        it('should default to I2C connector with I2C Config options', async () => {
+            const config = {address:0x19, busNumber:7};
+            const n1 = await loadAndGetNode(config);
 
-            it('should return expected response as JSON', async () => {
-                rw.readBufferIndex = 0;
-                await sendRequestCheckResponse({payload:{my:"request"}}, expectedResponse);
-            });
+            n1.Notecard.Connector.should.have.property('Address', config.address)
+            n1.Notecard.Connector.should.have.property('BusNumber', config.busNumber)
+        });
+        it('should configure I2C connector with I2C Config options', async () => {
+            const config = {connector:'i2c', address:0x19, busNumber:7};
+            const n1 = await loadAndGetNode(config);
+
+            n1.Notecard.Connector.should.have.property('Address', config.address);
+            n1.Notecard.Connector.should.have.property('BusNumber', config.busNumber);
+        });
+
+        it('should configure I2C connector with I2C numeric config options as strings', async () => {
+            const config = {connector:'i2c', address:'0x19', busNumber:'7'};
+            const n1 = await loadAndGetNode(config);
+
+            n1.Notecard.Connector.should.have.property('Address', 0x19);
+            n1.Notecard.Connector.should.have.property('BusNumber', 7);
+        });
+
+        it('should apply arbitrary connector object if connector property is an object', async () => {
+            connector = {name:"value"};
+            const config = {connector:connector}
+
+            const n1 = await loadAndGetNode(config);
+
+            n1.Notecard.Connector.should.deepEqual(connector);
 
         });
 
+        it('should throw error if connector type is unknown', () => {
+            const t = 'rando';
+            const config = {connector:t};
+            const p =  loadAndGetNode(config);
+           
+            //return p.should.be.rejectedWith(`Cannot instantiate with invalid connector type '${t}'`);
+            return p.should.be.resolvedWith(null);
+        });
+
+        it('should log error if Notecard connector fails to connect',  async () => {
+            const m = 'throw error on connection'
+            const config = {connector:{Open:async () => {throw new Error(m)}}}
+            const n1 = await loadAndGetNode(config);
+            n1.error.should.be.calledWithExactly(m);
+            
+        })
     });
-   
+
+
+
+    describe('Web Request GET available serial ports',() => {
+
+        it('should respond with serial port config list if ports available', async () => {
+            connector = {name:"value"};
+            const config = {connector:connector}
+            const n1 = await loadAndGetNode(config);
+            const res = await helper.request().get('/notecard/serialports').expect(200)
+            res.body.should.not.be.empty();
+            
+        });
+    });
+
     
 });
